@@ -6,26 +6,7 @@ function reg(name, fn) { COMMANDS[name] = fn; }
 
 /* ─── help ─── */
 reg('help', ({ printRaw }) => {
-  printRaw(`
-<span class="cyan bold">Available commands</span>
-<span class="dim">───────────────────────────────────────────────────────────</span>
-  <span class="green">whoami</span>      · About me
-  <span class="green">ls</span>          · List directory contents
-  <span class="green">cd</span>          · Change directory
-  <span class="green">cat</span>         · Display file contents
-  <span class="green">pwd</span>         · Print current directory
-  <span class="green">open</span>        · Open a URL or download CV  (open github / open cv.pdf)
-  <span class="green">projects</span>    · List my projects
-  <span class="green">skills</span>      · Display my skill set
-  <span class="green">contact</span>     · Show contact information
-  <span class="green">neofetch</span>    · System info + ASCII art
-  <span class="green">uname</span>       · Kernel/system info
-  <span class="green">echo</span>        · Print text
-  <span class="green">history</span>     · Show command history
-  <span class="green">man</span>         · Show manual for a command
-  <span class="green">clear</span>       · Clear the terminal
-<span class="dim">───────────────────────────────────────────────────────────</span>
-  Use <span class="cyan">Tab</span> to autocomplete · <span class="cyan">↑ ↓</span> to navigate history`.trim());
+  printRaw(DATA.locales[DATA.lang].help.trim());
 });
 
 /* ─── whoami / about ─── */
@@ -218,7 +199,7 @@ reg('neofetch', ({ printRaw }) => {
     [`<span class="green bold">Hermann Aust</span>`, ''],
     ['', ''],
     ['OS',       'HermannOS 1.0 (Raspberry Pi)'],
-    ['Role',     'Automotive Engineer · Software'],
+    ['Role',     DATA.locales[DATA.lang].neofetchRole],
     ['Shell',    'zsh (portfolio edition)'],
     ['Uptime',   upStr],
   ];
@@ -273,6 +254,35 @@ reg('man', ({ args, printRaw, escHtml }) => {
   } else {
     printRaw(`<span class="red">man: no manual entry for '${escHtml(cmd)}'</span>`);
   }
+});
+
+/* ─── lang ─── */
+reg('lang', ({ args, printRaw }) => {
+  const target = (args[0] || '').toLowerCase();
+
+  if (!target) {
+    const current = DATA.lang === 'de' ? 'Deutsch 🇩🇪' : 'English 🇬🇧';
+    printRaw(`Current language: <span class="cyan">${current}</span>  — try <span class="green">lang de</span> or <span class="green">lang en</span>`);
+    return;
+  }
+
+  if (!DATA.locales[target]) {
+    printRaw(`<span class="red">lang: unknown language '${target}'</span> — available: <span class="cyan">en</span>, <span class="cyan">de</span>`);
+    return;
+  }
+
+  if (target === DATA.lang) {
+    const already = DATA.lang === 'de' ? 'Sprache ist bereits Deutsch.' : 'Language is already English.';
+    printRaw(`<span class="dim">${already}</span>`);
+    return;
+  }
+
+  DATA.setLang(target);
+
+  const confirmMsg = target === 'de'
+    ? '<span class="green">Sprache auf Deutsch umgestellt.</span>'
+    : '<span class="green">Language switched to English.</span>';
+  printRaw(confirmMsg);
 });
 
 /* ─── sudo (Easter egg) ─── */

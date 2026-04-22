@@ -265,14 +265,14 @@ const Term = (() => {
     const banner = document.createElement('div');
     banner.className = 'output-line green bold';
     outputEl.appendChild(banner);
-    await typewriter(banner, `Hey, nice to meet you.\nI'm Hermann, have fun looking around.`, 22);
+    await typewriter(banner, DATA.locales[DATA.lang].welcome, 22);
 
     await new Promise(r => setTimeout(r, 120));
 
     const hint = document.createElement('div');
     hint.className = 'output-line dim';
     outputEl.appendChild(hint);
-    await typewriter(hint, `Type 'help' to see available commands.`, 18);
+    await typewriter(hint, DATA.locales[DATA.lang].helpHint, 18);
 
     const blank = document.createElement('div');
     blank.className = 'output-line';
