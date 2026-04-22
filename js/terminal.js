@@ -144,7 +144,11 @@ const Term = (() => {
     const handler = COMMANDS[cmd.toLowerCase()];
 
     if (handler) {
-      handler({ args, raw: trimmed, cwd, print, printText, printRaw, clear, escHtml, resolvePath, fsNode, setCwd, scrollBottom });
+      try {
+        handler({ args, raw: trimmed, cwd, print, printText, printRaw, clear, escHtml, resolvePath, fsNode, setCwd, scrollBottom });
+      } catch (err) {
+        printRaw(`<span class="red">error: ${escHtml(String(err.message ?? err))}</span>`);
+      }
     } else {
       printRaw(`<span class="red">command not found: ${escHtml(cmd)}</span> — type <span class="cyan">help</span> for a list of commands`);
     }

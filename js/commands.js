@@ -132,7 +132,7 @@ reg('projects', ({ printRaw, escHtml }) => {
     printRaw(`  <span class="green bold">${escHtml(p.name)}</span>`);
     printRaw(`  <span class="dim">${escHtml(p.description)}</span>`);
     printRaw(`  Stack: <span class="cyan">${p.stack.map(escHtml).join(' · ')}</span>`);
-    if (p.url) printRaw(`  URL:   <span class="link" onclick="window.open('${p.url}','_blank','noopener')">${escHtml(p.url)}</span>`);
+    if (p.url) printRaw(`  URL:   <span class="link" data-url="${escHtml(p.url)}">${escHtml(p.url)}</span>`);
     printRaw('');
   });
   printRaw(`<span class="dim">  Tip: cat projects/&lt;name&gt;.md for details</span>`);
@@ -386,6 +386,14 @@ document.addEventListener('DOMContentLoaded', () => {
     el.id = 'egglog';
     document.body.appendChild(el);
   }
+
+  /* Delegated handler for data-url links in terminal output */
+  document.getElementById('output').addEventListener('click', (e) => {
+    const url = e.target.dataset.url;
+    if (!url) return;
+    /* Only allow http/https URLs — reject javascript: and other schemes */
+    if (/^https?:\/\//i.test(url)) window.open(url, '_blank', 'noopener');
+  });
 
   Term.init();
 
