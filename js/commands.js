@@ -411,9 +411,13 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('btn-close').addEventListener('click', () => {
     closedScreen.classList.add('active');
   });
-  closedScreen.addEventListener('click', () => {
+  function dismissClosedScreen() {
     closedScreen.classList.remove('active');
     document.getElementById('cmd-input').focus();
+  }
+  closedScreen.addEventListener('click', dismissClosedScreen);
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && closedScreen.classList.contains('active')) dismissClosedScreen();
   });
 
   /* Yellow — minimize: collapse terminal body, click title bar to restore */
