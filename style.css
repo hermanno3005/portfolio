@@ -96,7 +96,6 @@ html, body {
 
 /* ── Output ── */
 #output {
-  flex: 1;
   white-space: pre-wrap;
   word-break: break-word;
   color: var(--fg);
