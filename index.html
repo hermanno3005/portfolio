@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>hermann@portfolio — zsh</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div id="window">
+    <div id="titlebar">
+      <div id="traffic-lights">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <span id="window-title">hermann@portfolio — zsh</span>
+    </div>
+
+    <div id="terminal" tabindex="0">
+      <div id="output"></div>
+
+      <div id="input-line">
+        <span id="prompt-display"></span>
+        <div id="input-wrapper">
+          <span id="input-mirror"></span>
+          <span id="cursor"></span>
+          <input id="cmd-input" type="text" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" aria-label="terminal input" />
+        </div>
+      </div>
+
+      <!-- sudo easter egg password prompt (hidden by default) -->
+      <div id="sudo-prompt" class="hidden">
+        <span class="dim">[sudo] password for hermann: </span>
+        <input id="sudo-input" type="password" autocomplete="off" />
+      </div>
+    </div>
+  </div>
+
+  <script src="js/data.js"></script>
+  <script src="js/terminal.js"></script>
+  <script src="js/commands.js"></script>
+</body>
+</html>
