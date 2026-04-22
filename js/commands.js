@@ -363,9 +363,6 @@ function runEasterEgg(printRaw, print, scrollBottom) {
 /* ─── Wire up after DOM ready ─── */
 window._bootTime = Date.now();
 
-/* Expose history to history command */
-const _origRun = undefined; // patched below after Term.init
-
 /* ─── Start terminal ─── */
 document.addEventListener('DOMContentLoaded', () => {
   /* Build easter egg overlay elements if not in HTML */
@@ -385,5 +382,50 @@ document.addEventListener('DOMContentLoaded', () => {
   /* Proxy history into window for the history command */
   Object.defineProperty(window, '_termHistory', {
     get() { return Term._history; },
+  });
+
+  /* ── Titlebar buttons ── */
+  const win         = document.getElementById('window');
+  const titlebar    = document.getElementById('titlebar');
+  const closedScreen = document.getElementById('closed-screen');
+
+  /* Red — close: show disconnected screen, click anywhere to restore */
+  document.getElementById('btn-close').addEventListener('click', () => {
+    closedScreen.classList.add('active');
+  });
+  closedScreen.addEventListener('click', () => {
+    closedScreen.classList.remove('active');
+    document.getElementById('cmd-input').focus();
+  });
+
+  /* Yellow — minimize: collapse terminal body, click title bar to restore */
+  document.getElementById('btn-minimize').addEventListener('click', () => {
+    win.classList.toggle('minimized');
+  });
+  titlebar.addEventListener('click', (e) => {
+    if (win.classList.contains('minimized') && !e.target.closest('.dot')) {
+      win.classList.remove('minimized');
+      document.getElementById('cmd-input').focus();
+    }
+  });
+
+  /* Green — fullscreen: toggle browser fullscreen */
+  document.getElementById('btn-fullscreen').addEventListener('click', () => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch(() => {
+        /* Fallback: toggle CSS fullscreen if API unavailable */
+        win.classList.toggle('fullscreen');
+      });
+    } else {
+      document.exitFullscreen();
+    }
+  });
+
+  /* Keep CSS class in sync with fullscreen state for styling hooks */
+  document.addEventListener('fullscreenchange', () => {
+    win.classList.toggle('fullscreen', !!document.fullscreenElement);
+    if (!document.fullscreenElement) {
+      document.getElementById('cmd-input').focus();
+    }
   });
 });

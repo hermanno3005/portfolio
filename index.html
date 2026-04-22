@@ -13,9 +13,9 @@
   <div id="window">
     <div id="titlebar">
       <div id="traffic-lights">
-        <span class="dot red"></span>
-        <span class="dot yellow"></span>
-        <span class="dot green"></span>
+        <span class="dot red"    id="btn-close"></span>
+        <span class="dot yellow" id="btn-minimize"></span>
+        <span class="dot green"  id="btn-fullscreen"></span>
       </div>
       <span id="window-title">hermann@portfolio — zsh</span>
     </div>
@@ -39,6 +39,15 @@
         <input id="sudo-input" type="password" autocomplete="off" />
       </div>
     </div>
+  </div>
+
+  <!-- Closed screen -->
+  <div id="closed-screen">
+    <div class="closed-msg">
+      Connection to <span>hermann@portfolio</span> closed by remote host.<br>
+      <span style="color:#444">~</span>
+    </div>
+    <div class="closed-hint">click anywhere to reconnect</div>
   </div>
 
   <script src="js/data.js"></script>

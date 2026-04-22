@@ -64,11 +64,34 @@ html, body {
   width: 12px;
   height: 12px;
   border-radius: 50%;
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: filter .15s;
+  position: relative;
 }
+.dot:hover  { filter: brightness(1.25); }
+.dot:active { filter: brightness(.85); }
 .dot.red    { background: #ff5f57; }
 .dot.yellow { background: #ffbd2e; }
 .dot.green  { background: #28c840; }
+
+/* Icon glyphs on hover */
+.dot::after {
+  content: '';
+  position: absolute;
+  opacity: 0;
+  transition: opacity .1s;
+  font-size: 9px;
+  line-height: 1;
+  color: rgba(0,0,0,.6);
+  font-family: sans-serif;
+  font-weight: 900;
+}
+#traffic-lights:hover .dot.red::after    { content: '✕'; opacity: 1; }
+#traffic-lights:hover .dot.yellow::after { content: '−'; opacity: 1; }
+#traffic-lights:hover .dot.green::after  { content: '+'; opacity: 1; }
 
 #window-title {
   flex: 1;
@@ -76,6 +99,46 @@ html, body {
   color: var(--dim);
   font-size: 12px;
   letter-spacing: .3px;
+}
+
+/* ── Window states ── */
+
+/* Minimized: collapse terminal body, leave title bar */
+#window.minimized #terminal { display: none; }
+#window.minimized { height: auto; cursor: pointer; }
+
+/* Fullscreen: window fills viewport, no rounding */
+#window.fullscreen {
+  width: 100vw !important;
+  height: 100vh !important;
+  border-radius: 0;
+  transition: none;
+}
+
+/* Closed: connection-lost overlay */
+#closed-screen {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: #000;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 12px;
+  font-family: var(--font);
+  z-index: 10000;
+}
+#closed-screen.active { display: flex; }
+#closed-screen .closed-msg {
+  color: var(--dim);
+  font-size: 13px;
+  text-align: center;
+  line-height: 2;
+}
+#closed-screen .closed-msg span { color: var(--red); }
+#closed-screen .closed-hint {
+  color: #333;
+  font-size: 11px;
 }
 
 /* ── Terminal Body ── */
