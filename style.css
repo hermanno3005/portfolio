@@ -151,29 +151,28 @@ html, body {
   z-index: 1;
 }
 
-#input-mirror {
+#input-before,
+#input-after {
   color: var(--fg);
   white-space: pre;
   pointer-events: none;
 }
 
 #cursor {
-  display: inline-block;
-  width: 9px;
-  height: calc(var(--font-size) * 1.2);
+  display: inline;
   background: var(--cursor);
-  vertical-align: text-bottom;
-  animation: blink 1.1s step-end infinite;
+  color: var(--bg);
+  animation: blink-cursor 1.1s step-end infinite;
   pointer-events: none;
 }
 
-@keyframes blink {
-  0%, 100% { opacity: 1; }
-  50%       { opacity: 0; }
+@keyframes blink-cursor {
+  0%, 49%   { background: var(--cursor); color: var(--bg); }
+  50%, 100% { background: transparent;  color: var(--fg); }
 }
 
-/* Cursor hidden while typing (reset via JS class) */
-#terminal.typing #cursor { animation: none; opacity: 1; }
+/* Cursor solid while typing */
+#terminal.typing #cursor { animation: none; background: var(--cursor); color: var(--bg); }
 
 /* ── Sudo prompt ── */
 #sudo-prompt {

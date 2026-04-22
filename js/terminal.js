@@ -4,7 +4,8 @@ const Term = (() => {
   const outputEl      = document.getElementById('output');
   const inputLineEl   = document.getElementById('input-line');
   const promptDisplay = document.getElementById('prompt-display');
-  const inputMirror   = document.getElementById('input-mirror');
+  const inputBefore   = document.getElementById('input-before');
+  const inputAfter    = document.getElementById('input-after');
   const cmdInput      = document.getElementById('cmd-input');
   const cursorEl      = document.getElementById('cursor');
   const termEl        = document.getElementById('terminal');
@@ -169,7 +170,7 @@ const Term = (() => {
     if (e.key === 'Enter') {
       const val = cmdInput.value;
       cmdInput.value = '';
-      inputMirror.textContent = '';
+      updateMirror();
       run(val);
       return;
     }
@@ -178,7 +179,7 @@ const Term = (() => {
       e.preventDefault();
       const completed = tabComplete(cmdInput.value);
       cmdInput.value = completed;
-      inputMirror.textContent = completed;
+      updateMirror();
       return;
     }
 
@@ -188,17 +189,23 @@ const Term = (() => {
       if (historyIdx < history.length - 1) historyIdx++;
       const val = history[historyIdx] ?? savedInput;
       cmdInput.value = val;
-      inputMirror.textContent = val;
+      updateMirror();
       return;
     }
 
     if (e.key === 'ArrowDown') {
       e.preventDefault();
-      if (historyIdx <= 0) { historyIdx = -1; cmdInput.value = savedInput; inputMirror.textContent = savedInput; return; }
+      if (historyIdx <= 0) { historyIdx = -1; cmdInput.value = savedInput; updateMirror(); return; }
       historyIdx--;
       const val = history[historyIdx];
       cmdInput.value = val;
-      inputMirror.textContent = val;
+      updateMirror();
+      return;
+    }
+
+    /* For left/right/Home/End: let the browser move the caret, then sync mirror */
+    if (['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(e.key)) {
+      setTimeout(updateMirror, 0);
       return;
     }
 
@@ -212,14 +219,22 @@ const Term = (() => {
       e.preventDefault();
       echoCommand(cmdInput.value + '^C');
       cmdInput.value = '';
-      inputMirror.textContent = '';
+      updateMirror();
       refreshPrompt();
       return;
     }
   }
 
+  function updateMirror() {
+    const val = cmdInput.value;
+    const pos = cmdInput.selectionStart ?? val.length;
+    inputBefore.textContent  = val.slice(0, pos);
+    cursorEl.textContent     = (val[pos] ?? ' ').replace(/ /g, '\u00A0');
+    inputAfter.textContent   = val.slice(pos + 1);
+  }
+
   function onInput() {
-    inputMirror.textContent = cmdInput.value;
+    updateMirror();
   }
 
   /* ── Boot sequence ── */
@@ -265,6 +280,7 @@ const Term = (() => {
 
     inputLineEl.classList.remove('hidden');
     refreshPrompt();
+    updateMirror();
     cmdInput.focus();
     scrollBottom();
   }
