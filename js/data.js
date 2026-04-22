@@ -28,8 +28,8 @@ makes cars smarter and engineers faster.`,
 ─────────────────────────────────────────────────────
 
   GitHub     https://github.com/hermanno3005
-  Email      [add your email here]
-  LinkedIn   [add your LinkedIn URL here]
+  Email      hermannaut00@gmail.com
+  LinkedIn   https://www.linkedin.com/in/hermann-aust/
 
 ─────────────────────────────────────────────────────
   Type 'open github' to open GitHub in a new tab.`,
@@ -54,8 +54,8 @@ makes cars smarter and engineers faster.`,
 
   links: {
     github:   'https://github.com/hermanno3005',
-    linkedin: null,
-    email:    null,
+    linkedin: 'https://www.linkedin.com/in/hermann-aust/',
+    email:    'hermannaut00@gmail.com',
   },
 
   /* Virtual filesystem tree */

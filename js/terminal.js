@@ -250,7 +250,7 @@ const Term = (() => {
     const banner = document.createElement('div');
     banner.className = 'output-line green bold';
     outputEl.appendChild(banner);
-    await typewriter(banner, `Welcome to Hermann's Portfolio v1.0.0`, 22);
+    await typewriter(banner, `Hey, nice to meet you.\nI'm Hermann, have fun looking around.`, 22);
 
     await new Promise(r => setTimeout(r, 120));
 

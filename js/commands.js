@@ -117,7 +117,7 @@ reg('open', ({ args, printRaw }) => {
   if (urlMap[arg] !== undefined) {
     const url = urlMap[arg];
     if (!url) {
-      printRaw(`<span class="red">open: no URL configured for '${arg}'</span>`);
+      printRaw(`<span class="red">open: no URL configured for '${arg}'</span> Try github, linkedin or email`);
       return;
     }
     if (arg === 'cv.pdf' || arg === 'cv') {
@@ -185,7 +185,7 @@ reg('history', ({ printRaw }) => {
 reg('uname', ({ args, printRaw }) => {
   const all = args.includes('-a');
   if (all) {
-    printRaw('HermannOS 1.0.0 portfolio-kernel #1 SMP Powered-by-Coffee aarch64 GNU/Linux');
+    printRaw('HermannOS 1.0.0 portfolio-kernel #1');
   } else {
     printRaw('HermannOS');
   }
@@ -194,12 +194,20 @@ reg('uname', ({ args, printRaw }) => {
 /* ─── neofetch ─── */
 reg('neofetch', ({ printRaw }) => {
   const art = [
-    '        .-.      ',
-    '       (o o)     ',
-    '       | O |     ',
-    '      /|---|\\   ',
-    '     / |   | \\  ',
-    "    '  '---'  '  ",
+    '                    ____----------- _____                    ',
+    '    \~~~~~~~~~~/~_--~~~------~~~~~     \                     ',
+    '  `---`\  _-~      |                   \                     ',
+    '    _-~  <_         |                     \[]                ',
+    '  / ___     ~~--[""] |      ________--------_                ',
+    '  > /~` \    |-.   `\~~.~~~~~                _ ~ - _         ',
+    '   ~|  ||\%  |       |    ~  ._                ~ _   ~ ._    ',
+    '   `_//|_%  \      |          ~  .              ~-_   /\     ',
+    '           `--__     |    _-____  /\               ~-_ \/.   ',
+    '                 ~--_ /  ,/ -~-_ \ \/          _______---~/  ',
+    '                     ~~-/._<   \ \`~~~~~~~~~~~~~     ##--~/  ',
+    '                           \    ) |`------##---~~~~-~  ) )   ',
+    '                            ~-_/_/                  ~~ ~~    ',
+
   ];
 
   const started = Date.now() - (window._bootTime || Date.now());
@@ -213,9 +221,6 @@ reg('neofetch', ({ printRaw }) => {
     ['Role',     'Automotive Engineer · Software'],
     ['Shell',    'zsh (portfolio edition)'],
     ['Uptime',   upStr],
-    ['Stack',    'Python · C++ · AUTOSAR · Linux'],
-    ['Editor',   'vim (naturally)'],
-    ['Coffee',   '∞ cups'],
   ];
 
   const maxArt = art.length;
@@ -348,7 +353,7 @@ function runEasterEgg(printRaw, print, scrollBottom) {
 ██████╔╝███████╗███████║   ██║   ██║  ██║╚██████╔╝   ██║   ███████╗██████╔╝
 ╚═════╝ ╚══════╝╚══════╝   ╚═╝   ╚═╝  ╚═╝ ╚═════╝    ╚═╝   ╚══════╝╚═════╝ `;
 
-      overlay.innerHTML = `<pre>${art}</pre><div class="msg">Restarting in 3 seconds…</div>`;
+      overlay.innerHTML = `<pre>${art}</pre><div class="msg">Restarting...</div>`;
 
       setTimeout(() => { location.reload(); }, 3000);
     }, 400);
