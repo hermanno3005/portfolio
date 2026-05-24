@@ -128,17 +128,23 @@ Derzeit tätig in OEM-Projekten und sammle dort Erfahrungen in der Prototypenent
     {
       id: 'portfolio',
       name: 'portfolio',
-      description: '',
+      description: 'terminal-like portfolio website',
       stack: ['HTML', 'CSS', 'JavaScript'],
       url: 'https://github.com/hermanno3005/portfolio',
     },
-    // Add more projects below:
+    //{
+    //  id: 'coach',
+    //  name: 'Personal AI Coach',
+    //  description: 'Claude powered Coach with access to all my workout information',
+    //  stack: ['n8n', 'python', 'Coros API'],
+    //  url: 'https://github.com/hermanno3005/personal_trainer',
+    //},
     // {
-    //   id: 'my-project',
-    //   name: 'my-project',
-    //   description: 'Short description.',
-    //   stack: ['Python', 'CAN'],
-    //   url: 'https://github.com/hermanno3005/my-project',
+    //   id: '3d-print',
+    //   name: '3D-Printing',
+    //   description: '',
+    //   stack: ['Autodesk Fusion', 'BambuLab'],
+    //   url: 'https://hermann-aust.com/3d-printing',
     // },
   ],
 
