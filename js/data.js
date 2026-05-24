@@ -11,20 +11,17 @@ const DATA = {
       about: `Hermann Aust
 Automotive Engineer · Software-Based Solutions
 
-I bridge the gap between mechanical engineering and software — designing
-embedded systems, toolchains, and data-driven solutions for the automotive
-industry.
-
-Currently focused on software architecture, automation, and anything that
-makes cars smarter and engineers faster.`,
+I graduated university with a degree in mechanical engineering.
+Passionate about bridging the gap between automotive engineering and software solutions working towards a safer autonomous vehicle.
+Currently working in OEM projects, gaining experience in prototype development.`,
 
       skills: `Languages & Tools
 ─────────────────────────────────────────────────────
-
-  Languages    Python · C · C++ · MATLAB · Bash · JavaScript
-  Embedded     AUTOSAR · CAN / LIN / FlexRay · ADAS toolchains
-  DevOps       Git · Docker · CI/CD · Linux
-  Other        Signal processing · Data analysis · Raspberry Pi
+  OEM-Tools     E-SYS · EDIABAS · SWL · INPA · SWHRL · ZEDIS
+  Languages     Python · MATLAB 
+  Embedded      CAN / LIN / FlexRay · Vector Tools
+  Dev Workflows Git · Docker · CI/CD
+  Other         Signal processing · Data analysis
 
 ─────────────────────────────────────────────────────`,
 
@@ -32,7 +29,7 @@ makes cars smarter and engineers faster.`,
 ─────────────────────────────────────────────────────
 
   GitHub     https://github.com/hermanno3005
-  Email      hermannaut00@gmail.com
+  Email      hermannaust00@gmail.com
   LinkedIn   https://www.linkedin.com/in/hermann-aust/
 
 ─────────────────────────────────────────────────────
@@ -72,20 +69,17 @@ makes cars smarter and engineers faster.`,
       about: `Hermann Aust
 Automotive Ingenieur · Softwarebasierte Lösungen
 
-Ich überbrücke die Lücke zwischen Maschinenbau und Software — ich entwickle
-eingebettete Systeme, Toolchains und datengetriebene Lösungen für die
-Automobilindustrie.
-
-Aktuell fokussiert auf Softwarearchitektur, Automatisierung und alles, was
-Autos intelligenter und Ingenieure schneller macht.`,
+Ich bin graduierter Maschinenbau-Ingenieur spezialisiert in Fahrzeugtechnik.
+Leidenschaftlich daran interessiert, die Lücke zwischen Fahrzeugtechnik und Softwarelösungen zu schließen - mit dem Ziel, autonomes Fahren sicherer und besser zu machen.
+Derzeit tätig in OEM-Projekten und sammle dort Erfahrungen in der Prototypenentwicklung.`,
 
       skills: `Sprachen & Werkzeuge
 ─────────────────────────────────────────────────────
 
-  Sprachen     Python · C · C++ · MATLAB · Bash · JavaScript
-  Embedded     AUTOSAR · CAN / LIN / FlexRay · ADAS-Toolchains
-  DevOps       Git · Docker · CI/CD · Linux
-  Sonstiges    Signalverarbeitung · Datenanalyse · Raspberry Pi
+  Sprachen      Python · MATLAB
+  Embedded      CAN / LIN / FlexRay · ADAS-Toolchains
+  Dev Workflows Git · Docker · CI/CD
+  Sonstiges     Signalverarbeitung · Datenanalyse
 
 ─────────────────────────────────────────────────────`,
 
@@ -93,7 +87,7 @@ Autos intelligenter und Ingenieure schneller macht.`,
 ─────────────────────────────────────────────────────
 
   GitHub     https://github.com/hermanno3005
-  E-Mail     hermannaut00@gmail.com
+  E-Mail     hermannaust00@gmail.com
   LinkedIn   https://www.linkedin.com/in/hermann-aust/
 
 ─────────────────────────────────────────────────────
