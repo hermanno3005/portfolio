@@ -36,7 +36,7 @@ Currently working in OEM projects, gaining experience in prototype development.`
   Type 'open github' to open GitHub in a new tab.`,
 
       projectDescriptions: [
-        'This terminal-style portfolio website — Ghostty-themed, vanilla JS, hosted on a Raspberry Pi.',
+        'This terminal-style portfolio website — Ghostty-themed, vanilla JS, hosted on Cloudflare.',
       ],
 
       neofetchRole: 'Automotive Engineer · Software',
@@ -94,7 +94,7 @@ Derzeit tätig in OEM-Projekten und sammle dort Erfahrungen in der Prototypenent
   Tippe 'open github' um GitHub in einem neuen Tab zu öffnen.`,
 
       projectDescriptions: [
-        'Diese terminal-basierte Portfolio-Website — Ghostty-Design, reines JavaScript, gehostet auf einem Raspberry Pi.',
+        'Diese terminal-basierte Portfolio-Website — Ghostty-Design, reines JavaScript, gehostet auf Cloudflare.',
       ],
 
       neofetchRole: 'Automotive Ingenieur · Software',
@@ -151,7 +151,7 @@ Derzeit tätig in OEM-Projekten und sammle dort Erfahrungen in der Prototypenent
   links: {
     github:   'https://github.com/hermanno3005',
     linkedin: 'https://www.linkedin.com/in/hermann-aust/',
-    email:    'hermannaut00@gmail.com',
+    email:    'hermannaust00@gmail.com',
   },
 
   /* Derived from active locale — do not edit directly */

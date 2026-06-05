@@ -223,7 +223,7 @@ reg('neofetch', ({ printRaw }) => {
   const info = [
     [`<span class="green bold">Hermann Aust</span>`, ''],
     ['', ''],
-    ['OS',       'HermannOS 1.0 (Raspberry Pi)'],
+    ['OS',       'HermannOS 1.0 (Cloudflare Edge)'],
     ['Role',     DATA.locales[DATA.lang].neofetchRole],
     ['Shell',    'zsh (portfolio edition)'],
     ['Uptime',   upStr],
@@ -399,7 +399,28 @@ function runEasterEgg(printRaw, print, scrollBottom) {
 window._bootTime = Date.now();
 
 /* ─── Start terminal ─── */
+/* Populate the mobile recruiter card from DATA so it stays in sync with the
+   content source. Always English (per design); the card is only ever shown on
+   touch devices via CSS — this just fills in text/links, it never affects desktop. */
+function initMobileCard() {
+  const card = document.getElementById('mobile-card');
+  if (!card) return;
+
+  const about = (DATA.locales.en && DATA.locales.en.about || '').split('\n');
+  const setText = (id, text) => { const el = document.getElementById(id); if (el && text) el.textContent = text; };
+  setText('mc-name', about[0]);
+  setText('mc-role', about[1]);
+  setText('mc-bio',  about.slice(2).join(' ').trim());
+
+  const setHref = (id, href) => { const el = document.getElementById(id); if (el && href) el.href = href; };
+  setHref('mc-linkedin', DATA.links.linkedin);
+  setHref('mc-github',   DATA.links.github);
+  setHref('mc-email',    DATA.links.email ? `mailto:${DATA.links.email}` : null);
+}
+
 document.addEventListener('DOMContentLoaded', () => {
+  initMobileCard();
+
   /* Build easter egg overlay elements if not in HTML */
   if (!document.getElementById('eggoverlay')) {
     const ov = document.createElement('div');
