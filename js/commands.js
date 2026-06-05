@@ -76,23 +76,56 @@ reg('cat', ({ args, cwd, printRaw, printText, resolvePath, fsNode, escHtml }) =>
     return;
   }
   if (node.content === '__CV__') {
-    printRaw(`<span class="dim">Binary file — </span><span class="cyan">open cv.pdf</span><span class="dim"> to download.</span>`);
+    printRaw(`<span class="dim">Binary file — </span><span class="cyan link" data-cmd="open cv">open cv.pdf</span><span class="dim"> to download (English or German).</span>`);
     return;
   }
 
   printText(node.content || '');
 });
 
+/* CV files by language */
+const CV_FILES = {
+  en: { url: 'assets/CV_Hermann_Aust.pdf',         name: 'Hermann_Aust_CV.pdf' },
+  de: { url: 'assets/Lebenslauf_Hermann_Aust.pdf', name: 'Hermann_Aust_Lebenslauf.pdf' },
+};
+
+function downloadCv(lang, printRaw) {
+  const cv = CV_FILES[lang];
+  const a = document.createElement('a');
+  a.href = cv.url;
+  a.download = cv.name;
+  a.click();
+  printRaw(`<span class="dim">Downloading </span><span class="cyan">${cv.name}</span><span class="dim">…</span>`);
+}
+
 /* ─── open ─── */
 reg('open', ({ args, printRaw }) => {
-  const arg = (args[0] || '').toLowerCase();
+  const arg  = (args[0] || '').toLowerCase();
+  const arg2 = (args[1] || '').toLowerCase();
+
+  /* CV download — choose a language */
+  if (arg === 'cv' || arg === 'cv.pdf') {
+    let lang = '';
+    if (['en', 'english'].includes(arg2)) lang = 'en';
+    else if (['de', 'german', 'deutsch'].includes(arg2)) lang = 'de';
+
+    if (lang) {
+      downloadCv(lang, printRaw);
+    } else {
+      const de = DATA.lang === 'de';
+      const prompt = de ? 'Wähle eine Version zum Herunterladen:'
+                        : 'Choose a version to download:';
+      printRaw(`<span class="dim">${prompt}</span>
+  <span class="cyan link" data-cmd="open cv en">open cv en</span>  <span class="dim">· English</span>
+  <span class="cyan link" data-cmd="open cv de">open cv de</span>  <span class="dim">· Deutsch</span>`);
+    }
+    return;
+  }
 
   const urlMap = {
     github:   DATA.links.github,
     linkedin: DATA.links.linkedin,
     email:    DATA.links.email ? `mailto:${DATA.links.email}` : null,
-    'cv.pdf': 'assets/cv.pdf',
-    cv:       'assets/cv.pdf',
   };
 
   if (urlMap[arg] !== undefined) {
@@ -101,16 +134,8 @@ reg('open', ({ args, printRaw }) => {
       printRaw(`<span class="red">open: no URL configured for '${arg}'</span> Try github, linkedin or email`);
       return;
     }
-    if (arg === 'cv.pdf' || arg === 'cv') {
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'Hermann_Aust_CV.pdf';
-      a.click();
-      printRaw(`<span class="dim">Downloading </span><span class="cyan">Hermann_Aust_CV.pdf</span><span class="dim">…</span>`);
-    } else {
-      window.open(url, '_blank', 'noopener');
-      printRaw(`<span class="dim">Opening </span><span class="cyan">${url}</span><span class="dim"> in a new tab…</span>`);
-    }
+    window.open(url, '_blank', 'noopener');
+    printRaw(`<span class="dim">Opening </span><span class="cyan">${url}</span><span class="dim"> in a new tab…</span>`);
     return;
   }
 
@@ -236,7 +261,7 @@ reg('man', ({ args, printRaw, escHtml }) => {
     cd:       'cd [path] — change the current directory (supports ~, .., absolute paths)',
     cat:      'cat &lt;file&gt; — display the contents of a file',
     pwd:      'pwd — print the current working directory',
-    open:     'open &lt;target&gt; — open a URL or download the CV. Targets: github, linkedin, cv.pdf',
+    open:     'open &lt;target&gt; — open a URL or download the CV. Targets: github, linkedin, cv (cv en / cv de)',
     projects: 'projects — list all portfolio projects with descriptions and links',
     skills:   'skills — display the full skill set and tech stack',
     contact:  'contact — show contact information and social links',
@@ -390,9 +415,14 @@ document.addEventListener('DOMContentLoaded', () => {
   /* Delegated handler for data-url links in terminal output */
   document.getElementById('output').addEventListener('click', (e) => {
     const url = e.target.dataset.url;
-    if (!url) return;
-    /* Only allow http/https URLs — reject javascript: and other schemes */
-    if (/^https?:\/\//i.test(url)) window.open(url, '_blank', 'noopener');
+    if (url) {
+      /* Only allow http/https URLs — reject javascript: and other schemes */
+      if (/^https?:\/\//i.test(url)) window.open(url, '_blank', 'noopener');
+      return;
+    }
+    /* Clickable in-terminal commands (e.g. CV language choice) */
+    const cmd = e.target.dataset.cmd;
+    if (cmd) Term.run(cmd);
   });
 
   Term.init();
