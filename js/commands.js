@@ -223,7 +223,7 @@ reg('neofetch', ({ printRaw }) => {
   const info = [
     [`<span class="green bold">Hermann Aust</span>`, ''],
     ['', ''],
-    ['OS',       'HermannOS 1.0 (Raspberry Pi)'],
+    ['OS',       'HermannOS 1.0 (Cloudflare Edge)'],
     ['Role',     DATA.locales[DATA.lang].neofetchRole],
     ['Shell',    'zsh (portfolio edition)'],
     ['Uptime',   upStr],
