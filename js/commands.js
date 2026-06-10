@@ -134,6 +134,12 @@ reg('open', ({ args, printRaw }) => {
       printRaw(`<span class="red">open: no URL configured for '${arg}'</span> Try github, linkedin or email`);
       return;
     }
+    if (arg === 'email') {
+      /* mailto in a new tab leaves a blank tab behind in some browsers */
+      location.href = url;
+      printRaw(`<span class="dim">Opening your mail client…</span>`);
+      return;
+    }
     window.open(url, '_blank', 'noopener');
     printRaw(`<span class="dim">Opening </span><span class="cyan">${url}</span><span class="dim"> in a new tab…</span>`);
     return;
@@ -167,8 +173,17 @@ reg('projects', ({ printRaw, escHtml }) => {
 reg('skills', ({ printText }) => printText(DATA.skills));
 
 /* ─── contact ─── */
-reg('contact', ({ printText, printRaw }) => {
-  printText(DATA.contact);
+/* Turn already-escaped plain text into clickable links (URLs + email). */
+function linkify(escapedLine) {
+  return escapedLine
+    .replace(/(https?:\/\/[^\s&<]+)/g,
+      '<a class="link" href="$1" target="_blank" rel="noopener">$1</a>')
+    .replace(/([\w.+-]+@[\w-]+\.[\w.-]+)(?![^<]*<\/a>)/g,
+      '<a class="link" href="mailto:$1">$1</a>');
+}
+
+reg('contact', ({ printRaw, escHtml }) => {
+  DATA.contact.split('\n').forEach(line => printRaw(linkify(escHtml(line))));
 });
 
 /* ─── clear ─── */

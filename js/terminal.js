@@ -14,7 +14,6 @@ const Term = (() => {
   let history     = [];
   let historyIdx  = -1;
   let savedInput  = '';
-  let sudoMode    = false;
 
   /* ── Prompt string ── */
   function promptStr() {
@@ -164,8 +163,6 @@ const Term = (() => {
 
   /* ── Keyboard handling ── */
   function onKeydown(e) {
-    if (sudoMode) return;
-
     /* Blink reset on any key */
     termEl.classList.add('typing');
     clearTimeout(termEl._blinkTimer);
@@ -242,7 +239,10 @@ const Term = (() => {
   }
 
   /* ── Boot sequence ── */
+  const REDUCED_MOTION = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
   async function typewriter(el, text, delay = 28) {
+    if (REDUCED_MOTION) { el.textContent += text; return; }
     for (const ch of text) {
       el.textContent += ch;
       await new Promise(r => setTimeout(r, delay));
@@ -293,7 +293,11 @@ const Term = (() => {
   function init() {
     cmdInput.addEventListener('keydown', onKeydown);
     cmdInput.addEventListener('input', onInput);
-    termEl.addEventListener('click', () => cmdInput.focus());
+    termEl.addEventListener('click', () => {
+      /* Don't steal focus while the user is selecting text to copy */
+      if (window.getSelection()?.toString()) return;
+      cmdInput.focus();
+    });
     boot();
   }
 

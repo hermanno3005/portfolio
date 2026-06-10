@@ -11,14 +11,14 @@ const DATA = {
       about: `Hermann Aust
 Automotive Engineer · Software-Based Solutions
 
-I graduated university with a degree in mechanical engineering.
-Passionate about bridging the gap between automotive engineering and software solutions working towards a safer autonomous vehicle.
-Currently working in OEM projects, gaining experience in prototype development.`,
+Dipl.-Ing. in Mechanical Engineering — Automotive Engineering, TU Dresden.
+Passionate about bridging the gap between automotive engineering and software, working towards safer autonomous driving.
+Currently working in OEM projects: prototype development, CAN bus analysis, and Python-based tooling.`,
 
       skills: `Languages & Tools
 ─────────────────────────────────────────────────────
   OEM-Tools     E-SYS · EDIABAS · SWL · INPA · SWHRL · ZEDIS
-  Languages     Python · MATLAB 
+  Languages     Python · MATLAB
   Embedded      CAN / LIN / FlexRay · Vector Tools
   Dev Workflows Git · Docker · CI/CD
   Other         Signal processing · Data analysis
@@ -37,8 +37,10 @@ Currently working in OEM projects, gaining experience in prototype development.`
 
       projectDescriptions: [
         'This terminal-style portfolio website — Ghostty-themed, vanilla JS, hosted on Cloudflare.',
+        'Self-hosted home server on a Raspberry Pi — Docker stack with Home Assistant, Matter server and OpenThread Border Router for a Matter-over-Thread smart home.',
+        'Claude-powered personal training coach with access to my full workout history via the COROS API.',
+        'Data logger for in-vehicle measurement data — built as my Diplomarbeit (university thesis).',
       ],
-
       neofetchRole: 'Automotive Engineer · Software',
       welcome: "Hey, nice to meet you.\nI'm Hermann, have fun looking around.",
       helpHint: "Type 'help' to see available commands.",
@@ -69,16 +71,16 @@ Currently working in OEM projects, gaining experience in prototype development.`
       about: `Hermann Aust
 Automotive Ingenieur · Softwarebasierte Lösungen
 
-Ich bin graduierter Maschinenbau-Ingenieur spezialisiert in Fahrzeugtechnik.
-Leidenschaftlich daran interessiert, die Lücke zwischen Fahrzeugtechnik und Softwarelösungen zu schließen - mit dem Ziel, autonomes Fahren sicherer und besser zu machen.
-Derzeit tätig in OEM-Projekten und sammle dort Erfahrungen in der Prototypenentwicklung.`,
+Diplom-Ingenieur Maschinenbau — Vertiefung Fahrzeugtechnik, TU Dresden.
+Mit Leidenschaft dabei, die Lücke zwischen Fahrzeugtechnik und Software zu schließen — für sichereres autonomes Fahren.
+Derzeit in OEM-Projekten tätig: Prototypenentwicklung, CAN-Bus-Analyse und Python-Tooling.`,
 
       skills: `Sprachen & Werkzeuge
 ─────────────────────────────────────────────────────
-
+  OEM-Tools     E-SYS · EDIABAS · SWL · INPA · SWHRL · ZEDIS
   Sprachen      Python · MATLAB
-  Embedded      CAN / LIN / FlexRay · ADAS-Toolchains
-  Dev Workflows Git · Docker · CI/CD
+  Embedded      CAN / LIN / FlexRay · Vector-Tools
+  Dev-Workflows Git · Docker · CI/CD
   Sonstiges     Signalverarbeitung · Datenanalyse
 
 ─────────────────────────────────────────────────────`,
@@ -95,6 +97,9 @@ Derzeit tätig in OEM-Projekten und sammle dort Erfahrungen in der Prototypenent
 
       projectDescriptions: [
         'Diese terminal-basierte Portfolio-Website — Ghostty-Design, reines JavaScript, gehostet auf Cloudflare.',
+        'Selbst gehosteter Home-Server auf einem Raspberry Pi — Docker-Stack mit Home Assistant, Matter-Server und OpenThread Border Router für ein Matter-over-Thread Smart Home.',
+        'Claude-basierter Personal-Trainer mit Zugriff auf meine komplette Trainingshistorie über die COROS-API.',
+        'Datenlogger für Fahrzeug-Messdaten — entstanden als Diplomarbeit.',
       ],
 
       neofetchRole: 'Automotive Ingenieur · Software',
@@ -130,22 +135,27 @@ Derzeit tätig in OEM-Projekten und sammle dort Erfahrungen in der Prototypenent
       name: 'portfolio',
       description: 'terminal-like portfolio website',
       stack: ['HTML', 'CSS', 'JavaScript'],
-      url: 'https://github.com/hermanno3005/portfolio',
+      /* TODO: re-add once the repo is public — a 404 link is worse than none.
+      url: 'https://github.com/hermanno3005/portfolio', */
     },
-    //{
-    //  id: 'coach',
-    //  name: 'Personal AI Coach',
-    //  description: 'Claude powered Coach with access to all my workout information',
-    //  stack: ['n8n', 'python', 'Coros API'],
-    //  url: 'https://github.com/hermanno3005/personal_trainer',
-    //},
-    // {
-    //   id: '3d-print',
-    //   name: '3D-Printing',
-    //   description: '',
-    //   stack: ['Autodesk Fusion', 'BambuLab'],
-    //   url: 'https://hermann-aust.com/3d-printing',
-    // },
+    {
+      id: 'hermipi',
+      name: 'HermiPi — Home Server',
+      description: 'self-hosted smart home stack',
+      stack: ['Linux', 'Docker', 'Home Assistant', 'Matter / Thread'],
+    },
+    {
+      id: 'ai-coach',
+      name: 'Personal AI Coach',
+      description: 'Claude-powered training coach',
+      stack: ['Python', 'n8n', 'Claude API', 'COROS API'],
+    },
+    {
+      id: 'datalogger',
+      name: 'Vehicle Data Logger',
+      description: 'Diplomarbeit',
+      stack: ['Embedded', 'CAN'],
+    },
   ],
 
   links: {
@@ -166,6 +176,7 @@ Derzeit tätig in OEM-Projekten und sammle dort Erfahrungen in der Prototypenent
   setLang(lang) {
     if (!this.locales[lang]) return false;
     this.lang = lang;
+    document.documentElement.lang = lang;
     const l = this.locales[lang];
 
     this.about   = l.about;

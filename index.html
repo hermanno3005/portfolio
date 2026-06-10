@@ -3,11 +3,22 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>hermann@portfolio — zsh</title>
+  <title>Hermann Aust · hermann@portfolio — zsh</title>
+  <meta name="description" content="Hermann Aust — automotive engineer in Munich working on ADAS and vehicle software: CAN bus analysis, diagnostics, Python tooling. Interactive terminal-style portfolio." />
+  <meta name="theme-color" content="#0d0d0d" />
+
+  <!-- Open Graph (link previews on LinkedIn, Slack, etc.) -->
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="Hermann Aust · Automotive Engineer — Software" />
+  <meta property="og:description" content="ADAS & vehicle software: CAN bus analysis, diagnostics, Python tooling. Explore the interactive terminal portfolio." />
+  <meta property="og:url" content="https://hermann-aust.com/" />
+  <!-- TODO: add a 1200x630 screenshot and uncomment:
+  <meta property="og:image" content="https://hermann-aust.com/assets/og-image.png" /> -->
+
   <link rel="icon" type="image/svg+xml" href="assets/favicon.svg" />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&display=swap" rel="stylesheet" />
+  <!-- JetBrains Mono is self-hosted (assets/fonts/, OFL license) — no Google Fonts
+       request, no visitor IPs sent to third parties (DSGVO). -->
+  <link rel="preload" href="assets/fonts/jetbrains-mono-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin />
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
@@ -42,7 +53,7 @@
     </div>
   </div>
 
-  <!-- Mobile recruiter card (shown only on touch devices ≤600px; desktop never sees it) -->
+  <!-- Mobile recruiter card (shown only on touch devices ≤900px, incl. landscape phones; desktop never sees it) -->
   <main id="mobile-card">
     <div class="mc-inner">
       <div class="mc-prompt">hermann@portfolio:~$ whoami</div>
