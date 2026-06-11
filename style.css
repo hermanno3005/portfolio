@@ -16,9 +16,6 @@
   --green:      #5af78e;
   --cyan:       #57c7ff;
   --red:        #ff5c57;
-  --yellow:     #f3f99d;
-  --magenta:    #ff6ac1;
-  --blue:       #57c7ff;
   --cursor:     #fffaf4;
   --selection:  #3d4551;
   --font:       'JetBrains Mono', 'Cascadia Code', 'Fira Code', monospace;
@@ -273,11 +270,8 @@ html, body {
 .green   { color: var(--green); }
 .cyan    { color: var(--cyan); }
 .red     { color: var(--red); }
-.yellow  { color: var(--yellow); }
-.magenta { color: var(--magenta); }
 .dim     { color: var(--dim); }
 .bold    { font-weight: 700; }
-.underline { text-decoration: underline; }
 .link    { color: var(--cyan); cursor: pointer; text-decoration: underline; }
 
 /* ── Neofetch Layout ── */

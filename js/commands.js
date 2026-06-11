@@ -99,7 +99,7 @@ function downloadCv(lang, printRaw) {
 }
 
 /* ─── open ─── */
-reg('open', ({ args, printRaw }) => {
+reg('open', ({ args, printRaw, escHtml }) => {
   const arg  = (args[0] || '').toLowerCase();
   const arg2 = (args[1] || '').toLowerCase();
 
@@ -148,11 +148,11 @@ reg('open', ({ args, printRaw }) => {
   /* Generic URL */
   if (arg.startsWith('http://') || arg.startsWith('https://')) {
     window.open(args[0], '_blank', 'noopener');
-    printRaw(`<span class="dim">Opening </span><span class="cyan">${args[0]}</span><span class="dim">…</span>`);
+    printRaw(`<span class="dim">Opening </span><span class="cyan">${escHtml(args[0])}</span><span class="dim">…</span>`);
     return;
   }
 
-  printRaw(`<span class="red">open: unknown target '${arg}'</span> — try: <span class="cyan">open github</span>, <span class="cyan">open cv.pdf</span>`);
+  printRaw(`<span class="red">open: unknown target '${escHtml(arg)}'</span> — try: <span class="cyan">open github</span>, <span class="cyan">open cv.pdf</span>`);
 });
 
 /* ─── projects ─── */
@@ -193,12 +193,12 @@ reg('clear', ({ clear }) => clear());
 reg('echo', ({ args, printText }) => printText(args.join(' ')));
 
 /* ─── history ─── */
-reg('history', ({ printRaw }) => {
-  /* Access via Term.run closure — history lives inside Term, so we proxy via a global */
-  if (!window._termHistory) { printRaw('<span class="dim">(empty)</span>'); return; }
-  window._termHistory.forEach((cmd, i) => {
-    const n = String(window._termHistory.length - i).padStart(4, ' ');
-    printRaw(`<span class="dim">${n}</span>  ${cmd}`);
+reg('history', ({ printRaw, escHtml }) => {
+  const hist = Term._history;
+  if (!hist.length) { printRaw('<span class="dim">(empty)</span>'); return; }
+  hist.forEach((cmd, i) => {
+    const n = String(hist.length - i).padStart(4, ' ');
+    printRaw(`<span class="dim">${n}</span>  ${escHtml(cmd)}`);
   });
 });
 
@@ -214,21 +214,21 @@ reg('uname', ({ args, printRaw }) => {
 
 /* ─── neofetch ─── */
 reg('neofetch', ({ printRaw }) => {
+  /* Backslashes must be doubled — '\~' in a JS string silently drops the backslash */
   const art = [
     '                    ____----------- _____                    ',
-    '    \~~~~~~~~~~/~_--~~~------~~~~~     \                     ',
-    '  `---`\  _-~      |                   \                     ',
-    '    _-~  <_         |                     \[]                ',
+    '    \\~~~~~~~~~~/~_--~~~------~~~~~     \\                     ',
+    '  `---`\\  _-~      |                   \\                     ',
+    '    _-~  <_         |                     \\[]                ',
     '  / ___     ~~--[""] |      ________--------_                ',
-    '  > /~` \    |-.   `\~~.~~~~~                _ ~ - _         ',
-    '   ~|  ||\%  |       |    ~  ._                ~ _   ~ ._    ',
-    '   `_//|_%  \      |          ~  .              ~-_   /\     ',
-    '           `--__     |    _-____  /\               ~-_ \/.   ',
-    '                 ~--_ /  ,/ -~-_ \ \/          _______---~/  ',
-    '                     ~~-/._<   \ \`~~~~~~~~~~~~~     ##--~/  ',
-    '                           \    ) |`------##---~~~~-~  ) )   ',
+    '  > /~` \\    |-.   `\\~~.~~~~~                _ ~ - _         ',
+    '   ~|  ||\\%  |       |    ~  ._                ~ _   ~ ._    ',
+    '   `_//|_%  \\      |          ~  .              ~-_   /\\     ',
+    '           `--__     |    _-____  /\\               ~-_ \\/.   ',
+    '                 ~--_ /  ,/ -~-_ \\ \\/          _______---~/  ',
+    '                     ~~-/._<   \\ \\`~~~~~~~~~~~~~     ##--~/  ',
+    '                           \\    ) |`------##---~~~~-~  ) )   ',
     '                            ~-_/_/                  ~~ ~~    ',
-
   ];
 
   const started = Date.now() - (window._bootTime || Date.now());
@@ -236,16 +236,13 @@ reg('neofetch', ({ printRaw }) => {
   const upStr   = upSec < 60 ? `${upSec}s` : `${Math.floor(upSec/60)}m ${upSec%60}s`;
 
   const info = [
-    [`<span class="green bold">Hermann Aust</span>`, ''],
+    ['', `<span class="green bold">Hermann Aust</span>`],
     ['', ''],
     ['OS',       'HermannOS 1.0 (Cloudflare Edge)'],
     ['Role',     DATA.locales[DATA.lang].neofetchRole],
     ['Shell',    'zsh (portfolio edition)'],
     ['Uptime',   upStr],
   ];
-
-  const maxArt = art.length;
-  const lines  = Math.max(maxArt, info.length);
 
   let html = '<div class="neofetch-grid">';
   html += '<div class="neofetch-art">';
@@ -297,7 +294,7 @@ reg('man', ({ args, printRaw, escHtml }) => {
 });
 
 /* ─── lang ─── */
-reg('lang', ({ args, printRaw }) => {
+reg('lang', ({ args, printRaw, escHtml }) => {
   const target = (args[0] || '').toLowerCase();
 
   if (!target) {
@@ -307,7 +304,7 @@ reg('lang', ({ args, printRaw }) => {
   }
 
   if (!DATA.locales[target]) {
-    printRaw(`<span class="red">lang: unknown language '${target}'</span> — available: <span class="cyan">en</span>, <span class="cyan">de</span>`);
+    printRaw(`<span class="red">lang: unknown language '${escHtml(target)}'</span> — available: <span class="cyan">en</span>, <span class="cyan">de</span>`);
     return;
   }
 
@@ -326,7 +323,7 @@ reg('lang', ({ args, printRaw }) => {
 });
 
 /* ─── sudo (Easter egg) ─── */
-reg('sudo', ({ args, raw, printRaw, print, scrollBottom }) => {
+reg('sudo', ({ raw, printRaw }) => {
   const isRmRf = raw.replace(/\s+/g, ' ').trim() === 'sudo rm -rf /' ||
                  raw.replace(/\s+/g, ' ').trim() === 'sudo rm -rf /*';
 
@@ -353,12 +350,12 @@ reg('sudo', ({ args, raw, printRaw, print, scrollBottom }) => {
     inputLineEl.classList.remove('hidden');
     cmdInputEl.focus();
 
-    runEasterEgg(printRaw, print, scrollBottom);
+    runEasterEgg();
   }
   sudoInput.addEventListener('keydown', acceptPassword);
 });
 
-function runEasterEgg(printRaw, print, scrollBottom) {
+function runEasterEgg() {
   const eggLog = document.getElementById('egglog');
   eggLog.classList.add('active');
   eggLog.innerHTML = '';
@@ -462,11 +459,6 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   Term.init();
-
-  /* Proxy history into window for the history command */
-  Object.defineProperty(window, '_termHistory', {
-    get() { return Term._history; },
-  });
 
   /* ── Titlebar buttons ── */
   const win         = document.getElementById('window');

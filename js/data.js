@@ -37,9 +37,10 @@ Currently working in OEM projects: prototype development, CAN bus analysis, and 
 
       projectDescriptions: [
         'This terminal-style portfolio website — Ghostty-themed, vanilla JS, hosted on Cloudflare.',
+        /* TODO: verify wording, then uncomment together with the projects below.
         'Self-hosted home server on a Raspberry Pi — Docker stack with Home Assistant, Matter server and OpenThread Border Router for a Matter-over-Thread smart home.',
         'Claude-powered personal training coach with access to my full workout history via the COROS API.',
-        'Data logger for in-vehicle measurement data — built as my Diplomarbeit (university thesis).',
+        'Data logger based on the HUAdapter Gen 2 for evaluating automated driving functions — built as my Diplomarbeit at TU Dresden.', */
       ],
       neofetchRole: 'Automotive Engineer · Software',
       welcome: "Hey, nice to meet you.\nI'm Hermann, have fun looking around.",
@@ -97,9 +98,10 @@ Derzeit in OEM-Projekten tätig: Prototypenentwicklung, CAN-Bus-Analyse und Pyth
 
       projectDescriptions: [
         'Diese terminal-basierte Portfolio-Website — Ghostty-Design, reines JavaScript, gehostet auf Cloudflare.',
+        /* TODO: verify wording, then uncomment together with the projects below.
         'Selbst gehosteter Home-Server auf einem Raspberry Pi — Docker-Stack mit Home Assistant, Matter-Server und OpenThread Border Router für ein Matter-over-Thread Smart Home.',
         'Claude-basierter Personal-Trainer mit Zugriff auf meine komplette Trainingshistorie über die COROS-API.',
-        'Datenlogger für Fahrzeug-Messdaten — entstanden als Diplomarbeit.',
+        'Datenlogger auf Basis des HUAdapter Gen 2 zur Bewertung automatisierter Fahrfunktionen — entstanden als Diplomarbeit an der TU Dresden.', */
       ],
 
       neofetchRole: 'Automotive Ingenieur · Software',
@@ -135,9 +137,10 @@ Derzeit in OEM-Projekten tätig: Prototypenentwicklung, CAN-Bus-Analyse und Pyth
       name: 'portfolio',
       description: 'terminal-like portfolio website',
       stack: ['HTML', 'CSS', 'JavaScript'],
-      /* TODO: re-add once the repo is public — a 404 link is worse than none.
-      url: 'https://github.com/hermanno3005/portfolio', */
+      url: 'https://github.com/hermanno3005/portfolio',
     },
+    /* TODO: verify descriptions/stacks, then uncomment together with the
+       projectDescriptions entries in BOTH locales above (order must match).
     {
       id: 'hermipi',
       name: 'HermiPi — Home Server',
@@ -154,8 +157,8 @@ Derzeit in OEM-Projekten tätig: Prototypenentwicklung, CAN-Bus-Analyse und Pyth
       id: 'datalogger',
       name: 'Vehicle Data Logger',
       description: 'Diplomarbeit',
-      stack: ['Embedded', 'CAN'],
-    },
+      stack: ['Python', 'GNSS / IMU', 'ROS'],
+    }, */
   ],
 
   links: {
