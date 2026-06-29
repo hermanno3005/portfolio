@@ -14,7 +14,6 @@ const Term = (() => {
   let history     = [];
   let historyIdx  = -1;
   let savedInput  = '';
-  let sudoMode    = false;
 
   /* ── Prompt string ── */
   function promptStr() {
@@ -27,7 +26,7 @@ const Term = (() => {
   }
 
   /* ── Output helpers ── */
-  function print(html = '', classes = '') {
+  function printRaw(html = '', classes = '') {
     const div = document.createElement('div');
     div.className = 'output-line' + (classes ? ' ' + classes : '');
     div.innerHTML = html;
@@ -36,11 +35,7 @@ const Term = (() => {
   }
 
   function printText(text, cls = '') {
-    text.split('\n').forEach(line => print(escHtml(line), cls));
-  }
-
-  function printRaw(html, cls = '') {
-    print(html, cls);
+    text.split('\n').forEach(line => printRaw(escHtml(line), cls));
   }
 
   function clear() {
@@ -92,7 +87,7 @@ const Term = (() => {
       if (matches.length === 1) {
         return matches[0] + ' ';
       } else if (matches.length > 1) {
-        print('');
+        printRaw('');
         printRaw(matches.map(m => `<span class="cyan">${escHtml(m)}</span>`).join('  '));
         return value;
       }
@@ -108,7 +103,7 @@ const Term = (() => {
           tokens[tokens.length - 1] = completed;
           return tokens.join(' ');
         } else if (matches.length > 1) {
-          print('');
+          printRaw('');
           printRaw(matches.map(m => {
             const childPath = dir + '/' + m;
             const isDir = fsNode(childPath) && fsNode(childPath).type === 'dir';
@@ -145,7 +140,7 @@ const Term = (() => {
 
     if (handler) {
       try {
-        handler({ args, raw: trimmed, cwd, print, printText, printRaw, clear, escHtml, resolvePath, fsNode, setCwd, scrollBottom });
+        handler({ args, raw: trimmed, cwd, printText, printRaw, clear, escHtml, resolvePath, fsNode, setCwd, scrollBottom });
       } catch (err) {
         printRaw(`<span class="red">error: ${escHtml(String(err.message ?? err))}</span>`);
       }
@@ -164,8 +159,6 @@ const Term = (() => {
 
   /* ── Keyboard handling ── */
   function onKeydown(e) {
-    if (sudoMode) return;
-
     /* Blink reset on any key */
     termEl.classList.add('typing');
     clearTimeout(termEl._blinkTimer);
@@ -242,7 +235,10 @@ const Term = (() => {
   }
 
   /* ── Boot sequence ── */
+  const REDUCED_MOTION = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
   async function typewriter(el, text, delay = 28) {
+    if (REDUCED_MOTION) { el.textContent += text; return; }
     for (const ch of text) {
       el.textContent += ch;
       await new Promise(r => setTimeout(r, delay));
@@ -293,9 +289,13 @@ const Term = (() => {
   function init() {
     cmdInput.addEventListener('keydown', onKeydown);
     cmdInput.addEventListener('input', onInput);
-    termEl.addEventListener('click', () => cmdInput.focus());
+    termEl.addEventListener('click', () => {
+      /* Don't steal focus while the user is selecting text to copy */
+      if (window.getSelection()?.toString()) return;
+      cmdInput.focus();
+    });
     boot();
   }
 
-  return { init, print, printText, printRaw, clear, run, escHtml, resolvePath, fsNode, setCwd, scrollBottom, get cwd() { return cwd; }, get _history() { return history; } };
+  return { init, printText, printRaw, clear, run, escHtml, resolvePath, fsNode, setCwd, scrollBottom, get cwd() { return cwd; }, get _history() { return history; } };
 })();

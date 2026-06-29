@@ -1,3 +1,12 @@
+/* ── Self-hosted JetBrains Mono (variable, latin) — see assets/fonts/LICENSE-OFL.txt ── */
+@font-face {
+  font-family: 'JetBrains Mono';
+  src: url('assets/fonts/jetbrains-mono-latin-wght-normal.woff2') format('woff2-variations');
+  font-weight: 100 800;
+  font-style: normal;
+  font-display: swap;
+}
+
 /* ── Ghostty Dark Default theme ── */
 :root {
   --bg:         #0d0d0d;
@@ -7,9 +16,6 @@
   --green:      #5af78e;
   --cyan:       #57c7ff;
   --red:        #ff5c57;
-  --yellow:     #f3f99d;
-  --magenta:    #ff6ac1;
-  --blue:       #57c7ff;
   --cursor:     #fffaf4;
   --selection:  #3d4551;
   --font:       'JetBrains Mono', 'Cascadia Code', 'Fira Code', monospace;
@@ -18,6 +24,12 @@
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+::selection { background: var(--selection); color: var(--fg); }
+
+@media (prefers-reduced-motion: reduce) {
+  #cursor { animation: none; } /* solid block instead of blinking */
+}
 
 html, body {
   height: 100%;
@@ -258,11 +270,8 @@ html, body {
 .green   { color: var(--green); }
 .cyan    { color: var(--cyan); }
 .red     { color: var(--red); }
-.yellow  { color: var(--yellow); }
-.magenta { color: var(--magenta); }
 .dim     { color: var(--dim); }
 .bold    { font-weight: 700; }
-.underline { text-decoration: underline; }
 .link    { color: var(--cyan); cursor: pointer; text-decoration: underline; }
 
 /* ── Neofetch Layout ── */
@@ -321,8 +330,9 @@ html, body {
 #mobile-card { display: none; }
 
 /* Shown ONLY on touch devices — a desktop mouse user never sees this, even when
-   the window is narrow (pointer: coarse guarantees the normal version is unchanged). */
-@media (max-width: 600px) and (pointer: coarse) {
+   the window is narrow (pointer: coarse guarantees the normal version is unchanged).
+   900px instead of 600px so landscape phones (~850px wide) also get the card. */
+@media (max-width: 900px) and (pointer: coarse) {
   body { overflow: auto; display: block; }
   #window, #closed-screen { display: none !important; }
 
