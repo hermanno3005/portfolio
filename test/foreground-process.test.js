@@ -579,7 +579,10 @@ describe('the demo registry', () => {
   it('is read at run time, so the script order does not matter', async () => {
     const reordered = await mountTerminal({ scripts: ['js/data.js', 'js/demos.js', 'js/terminal.js', 'js/commands.js'] });
 
-    await reordered.run('pacelab');
+    /* Skipped rather than sat through, for the reason given below. */
+    const done = reordered.run('pacelab');
+    reordered.press('Escape');
+    await done;
 
     expect(reordered.frame()).not.toBeNull();
     expect(reordered.warnings()).toEqual([]);

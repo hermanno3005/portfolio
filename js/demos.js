@@ -77,10 +77,11 @@ const PACELAB_GRID  = '#1e1e1e';
 const PACELAB_TICK  = '#3a3f47';
 const PACELAB_MUTED = '#4b515a';
 
-/* The end labels' real coordinates. Named constants because the next ticket's
-   flying number computes its landing transform from them: hand-guessed offsets
-   came out ~78px wide of where the label actually sits. */
+/* The end labels' real coordinates. Named constants because beat two's flying
+   number computes its landing transform from them: hand-guessed offsets came
+   out ~78px wide of where the label actually sits. */
 const PACELAB_LABEL_X     = PACELAB_PLOT.x1 + 10;
+const PACELAB_LABEL_SIZE  = 12;   /* …and the size the flying number shrinks to */
 const PACELAB_LABEL_OBS_Y = paceY(PACELAB_OBSERVED.at(-1)) + 4;
 const PACELAB_LABEL_NP_Y  = paceY(PACELAB_NORMALIZED.at(-1)) + 4;
 
@@ -137,17 +138,36 @@ function pacelabAxes() {
    the NP line is, so the legend and the line read as the same thing. */
 const PACELAB_LEGEND = `<text x="${PACELAB_PLOT.x0}" y="26" font-size="11" letter-spacing="2"><tspan fill="${PACELAB_MUTED}">SEASON · </tspan><tspan fill="var(--green)">NORMALIZED PACE</tspan></text>`;
 
+/* The season, drawn once for the two paints that contain it.
+ *
+ * Beat two ends on this drawing and the landing frame *is* this drawing, and
+ * the closing paint between them has to be imperceptible — so the two cannot be
+ * two copies that agree today. The hooks are the only difference: beat two
+ * hangs its animations off these elements, the landing frame hangs nothing.
+ * Every one of them is an id, a class or a style, none of which changes what
+ * the element looks like once the motion has finished.
+ */
+function pacelabSeason(hooks = {}) {
+  const {
+    chrome = furniture => furniture,   /* the axes and the legend, as one group */
+    gap = '', obs = '', np = '',
+    obsDot = () => '', npDot = () => '',
+    lblObs = '', lblNp = '',
+  } = hooks;
+
+  return `${chrome(pacelabAxes() + PACELAB_LEGEND)}
+    <path${gap} d="${PACELAB_GAP_D}" fill="url(#pl-gap)"/>
+    <path${obs} d="${PACELAB_OBS_D}" fill="none" stroke="${PACELAB_MUTED}" stroke-width="2"/>
+    <path${np} d="${PACELAB_NP_D}" fill="none" stroke="var(--green)" stroke-width="2.5" filter="url(#pl-glow)"/>
+    ${PACELAB_OBS_PTS.map((p, i) => `<circle${obsDot(i)} cx="${p[0]}" cy="${p[1]}" r="2.5" fill="${PACELAB_MUTED}"/>`).join('')}
+    ${PACELAB_NP_PTS.map((p, i) => `<circle${npDot(i)} cx="${p[0]}" cy="${p[1]}" r="3.5" fill="var(--green)"/>`).join('')}
+    <text${lblObs} x="${PACELAB_LABEL_X}" y="${PACELAB_LABEL_OBS_Y}" fill="${PACELAB_MUTED}" font-size="${PACELAB_LABEL_SIZE}">${mmss(PACELAB_OBSERVED.at(-1))} ran</text>
+    <text${lblNp} x="${PACELAB_LABEL_X}" y="${PACELAB_LABEL_NP_Y}" fill="var(--green)" font-size="${PACELAB_LABEL_SIZE}" font-weight="700">${mmss(PACELAB_NORMALIZED.at(-1))} NP</text>`;
+}
+
 const PACELAB_CHART = `<svg viewBox="0 0 ${PACELAB_VIEW_W} ${PACELAB_VIEW_H}" font-family="var(--font)" aria-hidden="true">
     ${PACELAB_DEFS}
-    ${pacelabAxes()}
-    ${PACELAB_LEGEND}
-    <path d="${PACELAB_GAP_D}" fill="url(#pl-gap)"/>
-    <path d="${PACELAB_OBS_D}" fill="none" stroke="${PACELAB_MUTED}" stroke-width="2"/>
-    <path d="${PACELAB_NP_D}" fill="none" stroke="var(--green)" stroke-width="2.5" filter="url(#pl-glow)"/>
-    ${PACELAB_OBS_PTS.map(p => `<circle cx="${p[0]}" cy="${p[1]}" r="2.5" fill="${PACELAB_MUTED}"/>`).join('')}
-    ${PACELAB_NP_PTS.map(p => `<circle cx="${p[0]}" cy="${p[1]}" r="3.5" fill="var(--green)"/>`).join('')}
-    <text x="${PACELAB_LABEL_X}" y="${PACELAB_LABEL_OBS_Y}" fill="${PACELAB_MUTED}" font-size="12">${mmss(PACELAB_OBSERVED.at(-1))} ran</text>
-    <text x="${PACELAB_LABEL_X}" y="${PACELAB_LABEL_NP_Y}" fill="var(--green)" font-size="12" font-weight="700">${mmss(PACELAB_NORMALIZED.at(-1))} NP</text>
+    ${pacelabSeason()}
   </svg>`;
 
 /* The chart is `aria-hidden` and the caption below is its text alternative: an
@@ -241,13 +261,21 @@ const PACELAB_ODO_WINDOW = { x: 110, y: 96, w: 420, h: 100 };
 const PACELAB_UNIT_X     = 392;   /* `/km`, set just clear of the widest value */
 const PACELAB_META_Y     = 70;
 
+/* The run this beat is about, stated once: beat two redraws the strip as it
+   clears it out, and two copies of a date would be two chances to disagree.
+   Heat is wet-bulb globe temperature — the load a body actually carries, not
+   the number on a forecast. `30 °C` would name a different model. */
+const PACELAB_META = '05 AUG · 9.6 km · WBGT 29';
+
 /* The label's baseline, and the shift that builds the term. `PACE` starts where
    `NORMALIZED` will and slides out of its way by exactly that word plus the
    space after it, so what lands is spaced as though it had always been one
    string. One character's advance is 12px mono at 7.2px wide, tracked 2px. */
 const PACELAB_LABEL_ADVANCE = 9.2;
 const PACELAB_LABEL_Y     = 212;
-const PACELAB_LABEL_SHIFT = 'NORMALIZED '.length * PACELAB_LABEL_ADVANCE;
+const PACELAB_LABEL_LEAD  = 'NORMALIZED';
+const PACELAB_LABEL_TERM  = 'PACE';
+const PACELAB_LABEL_SHIFT = (PACELAB_LABEL_LEAD.length + 1) * PACELAB_LABEL_ADVANCE;
 
 /* The three terms, as data — because the whole beat turns on the difference
    between two of them and the third, and that difference should be stated once
@@ -265,16 +293,26 @@ const PACELAB_CHIPS = [
   { id: 'wind',  glyph: '💨', label: 'wind',  value: '+0 — not in NP', colour: PACELAB_TICK, fill: '#101010', line: '#232323', in: 1.1 },
 ];
 
+/* The term that is measured and then left outside, by name: beat two redraws
+   this one chip as it clears the seam, and "the last row" would quietly become
+   the wrong chip the day a fourth term is measured. */
+const PACELAB_WIND = PACELAB_CHIPS.find(chip => !chip.go);
+
 const pacelabChipY = row => PACELAB_CHIP.y0 + row * PACELAB_CHIP.gap;
 
 /* One chip. The excluded term gets the same box as the applied ones — dashed,
    grey and struck through — because "measured, then left outside" only reads if
    it is standing next to the two that went in, and it keeps its `+0` for the
    same reason: a value that was computed and then declined, not an absence. */
-function pacelabChip(chip, row) {
+/* `id` is the handle beat one's stylesheet animates the chip by. Beat two
+   redraws the wind chip *without* one, because that stylesheet outlives its
+   frame: a `Ctrl+C` leaves beat one in the scrollback, so its `#pl-wind` rule
+   is still in the document when beat two paints, and it would out-specify the
+   fade-out and bring the chip back in instead of clearing it. */
+function pacelabChip(chip, row, id = `pl-${chip.id}`) {
   const y = pacelabChipY(row);
   const out = !chip.go;
-  return `<g id="pl-${chip.id}" class="pl-chip">
+  return `<g${id ? ` id="${id}"` : ''} class="pl-chip">
       <rect x="${PACELAB_CHIP.x}" y="${y}" width="${PACELAB_CHIP.w}" height="${PACELAB_CHIP.h}" rx="4" fill="${chip.fill}" stroke="${chip.line}"${out ? ' stroke-dasharray="3 3"' : ''}/>
       <text x="${PACELAB_CHIP.x + 18}" y="${y + 23}" font-size="15" fill="${chip.colour}">${chip.glyph}</text>
       <text x="${PACELAB_CHIP.x + 42}" y="${y + 23}" font-size="14" fill="${out ? PACELAB_TICK : 'var(--dim)'}"${out ? ' text-decoration="line-through"' : ''}>${chip.label}</text>
@@ -290,9 +328,6 @@ function pacelabChipCss(chip, row) {
                 animation: plChipIn .45s cubic-bezier(.2,.9,.3,1) ${chip.in}s both${chip.go ? `, plChipGo .7s ease-in ${chip.go}s both` : ''}; }`;
 }
 
-/* Heat is wet-bulb globe temperature — the load a body actually carries, not
-   the number on a forecast. The strip says WBGT for the same reason the chip
-   carries a thermometer and no unit: `30 °C` would name a different model. */
 const PACELAB_BEAT_ONE = `<svg viewBox="0 0 ${PACELAB_VIEW_W} ${PACELAB_VIEW_H}" font-family="var(--font)" aria-hidden="true"><style>
     @keyframes plFade   { from { opacity: 0 } to { opacity: 1 } }
     @keyframes plChipIn { from { opacity: 0; transform: translateX(46px) } to { opacity: 1; transform: translateX(0) } }
@@ -319,7 +354,7 @@ const PACELAB_BEAT_ONE = `<svg viewBox="0 0 ${PACELAB_VIEW_W} ${PACELAB_VIEW_H}"
     #pl-unit       { animation: plFade .5s ease .15s both; }
   </style>
 
-    <text id="pl-meta" x="${PACELAB_BEAT_LEFT}" y="${PACELAB_META_Y}" fill="${PACELAB_TICK}" font-size="11" letter-spacing="2">05 AUG · 9.6 km · WBGT 29</text>
+    <text id="pl-meta" x="${PACELAB_BEAT_LEFT}" y="${PACELAB_META_Y}" fill="${PACELAB_TICK}" font-size="11" letter-spacing="2">${PACELAB_META}</text>
 
     <clipPath id="pl-odo-clip"><rect x="${PACELAB_ODO_WINDOW.x}" y="${PACELAB_ODO_WINDOW.y}" width="${PACELAB_ODO_WINDOW.w}" height="${PACELAB_ODO_WINDOW.h}"/></clipPath>
     <g clip-path="url(#pl-odo-clip)"><g id="pl-odo">
@@ -327,10 +362,116 @@ const PACELAB_BEAT_ONE = `<svg viewBox="0 0 ${PACELAB_VIEW_W} ${PACELAB_VIEW_H}"
     </g></g>
     <text id="pl-unit" x="${PACELAB_UNIT_X}" y="${PACELAB_ODO_Y}" fill="${PACELAB_TICK}" font-size="20">/km</text>
 
-    <text id="pl-pace" x="${PACELAB_BEAT_LEFT}" y="${PACELAB_LABEL_Y}" fill="${PACELAB_TICK}" font-size="12" letter-spacing="2">PACE</text>
-    <text id="pl-normalized" x="${PACELAB_BEAT_LEFT}" y="${PACELAB_LABEL_Y}" fill="var(--green)" font-size="12" letter-spacing="2">NORMALIZED</text>
+    <text id="pl-pace" x="${PACELAB_BEAT_LEFT}" y="${PACELAB_LABEL_Y}" fill="${PACELAB_TICK}" font-size="12" letter-spacing="2">${PACELAB_LABEL_TERM}</text>
+    <text id="pl-normalized" x="${PACELAB_BEAT_LEFT}" y="${PACELAB_LABEL_Y}" fill="var(--green)" font-size="12" letter-spacing="2">${PACELAB_LABEL_LEAD}</text>
 
-    ${PACELAB_CHIPS.map(pacelabChip).join('\n    ')}
+    ${/* spelled out rather than point-free: `map` would hand its third argument
+          to the id parameter below, which is a landmine, not a shorthand */
+      PACELAB_CHIPS.map((chip, row) => pacelabChip(chip, row)).join('\n    ')}
+  </svg>`;
+
+/* ══════════════════════════════════════════════════════════════════════════
+   PaceLab — beat two: the pull-back, and the same subtraction on a season
+
+   The number beat one computed is not discarded. It flies to the August slot
+   and crossfades into the `5:14 NP` end label, *becoming* that month's data
+   point; the season then assembles forwards, April to August, running towards
+   it. The rhyme is the whole argument — one run, then every run.
+
+   Two things here are load-bearing rather than decorative.
+
+   **The landing transform is derived**, from the end label's real coordinates
+   and the ratio of the two font sizes. That is *why* the crossfade can be
+   invisible; hand-guessed offsets came out ~78px wide of where the label sits.
+
+   **This beat's final state is the landing frame**, element for element — see
+   `pacelabSeason()`, which draws both. Four separate routes deliver that frame,
+   so a visible pop on the happy path is a visible pop on all of them. And
+   because the hold is `settle()`, the closing paint happens exactly when the
+   motion stops, on the same timeline that drove it: it cannot fire mid-flight,
+   which is what makes the zero-cut property structural rather than something
+   re-verified by eye every time a delay moves.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* The pull-back, as geometry. The transform-origin is the number's own anchor,
+   so the translation is simply the difference between where it sits and where
+   the label does, and the scale is the ratio of the two type sizes — every term
+   of it read off the label the number is flying into. */
+const PACELAB_FLY_SCALE  = PACELAB_LABEL_SIZE / PACELAB_ODO_SIZE;
+const PACELAB_FLY_TX     = (PACELAB_LABEL_X - PACELAB_BEAT_LEFT).toFixed(1);
+const PACELAB_FLY_TY     = (PACELAB_LABEL_NP_Y - PACELAB_ODO_Y).toFixed(1);
+
+/* The flight, and the moment it ends. A crossfade is one event, so the number's
+   exit and the label's entrance are written against a single instant rather
+   than two constants that drift apart into a blink or an overlap. The reference
+   prototype typed those two out by hand as 1.02s and 1.06s; they are the same
+   30ms either side of arrival, and deriving the instant is what stops them
+   parting company the next time the flight's duration is touched. */
+const PACELAB_FLY_IN  = 0.15;
+const PACELAB_FLY_DUR = 0.9;
+const PACELAB_ARRIVE  = (PACELAB_FLY_IN + PACELAB_FLY_DUR).toFixed(2);
+
+/* The caption comes in last, over the final half-second of the chart settling,
+   which makes its fade the closing motion of the beat and therefore the thing
+   `settle()` is still waiting on at the end. That is the guarantee the frame's
+   fixed height was bought for: the landing frame, where the caption is simply
+   opaque, cannot take over before this has played out. It rides in a style
+   attribute because the caption is a sibling of the SVG rather than part of it;
+   the keyframes are document-wide either way. */
+const PACELAB_CAP_IN = 'animation: plFade .5s ease 3.25s both';
+
+const PACELAB_BEAT_TWO = `<svg viewBox="0 0 ${PACELAB_VIEW_W} ${PACELAB_VIEW_H}" font-family="var(--font)" aria-hidden="true"><style>
+    @keyframes plFade    { from { opacity: 0 } to { opacity: 1 } }
+    @keyframes plFadeOut { from { opacity: 1 } to { opacity: 0 } }
+    @keyframes plFly     { from { transform: translate(0, 0) scale(1) }
+                           to   { transform: translate(${PACELAB_FLY_TX}px, ${PACELAB_FLY_TY}px) scale(${PACELAB_FLY_SCALE}) } }
+    @keyframes plDraw    { to { stroke-dashoffset: 0 } }
+    /* with pathLength 1 the dash is the whole line, so 1 → 0 draws it from the
+       path's own start — which is April, and is why the season runs forwards */
+    .pl-draw   { stroke-dasharray: 1; stroke-dashoffset: 1; }
+    /* beat one is still on screen at the seam; it clears from under the flight */
+    .pl-gone   { animation: plFadeOut .3s ease both; }
+    #pl-fly    { transform-box: view-box; transform-origin: ${PACELAB_BEAT_LEFT}px ${PACELAB_ODO_Y}px;
+                 animation: plFly ${PACELAB_FLY_DUR}s cubic-bezier(.6,0,.25,1) ${PACELAB_FLY_IN}s both,
+                            plFadeOut .22s ease ${PACELAB_ARRIVE}s both; }
+    /* the number has landed: it is the label now, and August's data point */
+    .pl-arrive { animation: plFade .25s ease ${PACELAB_ARRIVE}s both; }
+    #pl-ax     { animation: plFade .5s ease .55s both; }
+    #pl-obs    { animation: plDraw 1s cubic-bezier(.45,0,.35,1) 1.15s both; }
+    #pl-np     { animation: plDraw .95s cubic-bezier(.45,0,.35,1) 2.3s both; }
+    #pl-gap-in { animation: plFade .85s ease 2.45s both; }
+    .pl-lbl-obs { animation: plFade .4s ease 2.15s both; }
+    /* one rule and one duration; each dot's own delay rides on the element */
+    .pl-dot    { animation: plFade .3s ease both; }
+  </style>
+    ${PACELAB_DEFS}
+    ${pacelabSeason({
+      chrome: furniture => `<g id="pl-ax">${furniture}</g>`,
+      gap: ' id="pl-gap-in"',
+      obs: ' id="pl-obs" class="pl-draw" pathLength="1"',
+      np:  ' id="pl-np" class="pl-draw" pathLength="1"',
+      obsDot: i => ` class="pl-dot" style="animation-delay:${(1.25 + i * 0.2).toFixed(2)}s"`,
+      /* August's normalized dot does not fade in with the rest: it flew here */
+      npDot: i => i === PACELAB_MONTHS.length - 1
+        ? ' class="pl-arrive"'
+        : ` class="pl-dot" style="animation-delay:${(2.4 + i * 0.19).toFixed(2)}s"`,
+      lblObs: ' class="pl-lbl-obs"',
+      lblNp:  ' class="pl-arrive"',
+    })}
+
+    <!-- beat one, redrawn exactly where it is standing when this paint replaces
+         it, so the opening seam is as invisible as the closing one. The built
+         term stays two texts a slide apart rather than becoming the one string
+         it reads as: PACE sits where the *transform* put it, and collapsing it
+         would re-derive that position from a per-character advance that is an
+         estimate — the same hand-guessed offset the landing transform avoids. -->
+    <text class="pl-gone" x="${PACELAB_BEAT_LEFT}" y="${PACELAB_META_Y}" fill="${PACELAB_TICK}" font-size="11" letter-spacing="2">${PACELAB_META}</text>
+    <text class="pl-gone" x="${PACELAB_UNIT_X}" y="${PACELAB_ODO_Y}" fill="${PACELAB_TICK}" font-size="20">/km</text>
+    <text class="pl-gone" x="${PACELAB_BEAT_LEFT}" y="${PACELAB_LABEL_Y}" fill="var(--green)" font-size="${PACELAB_LABEL_SIZE}" letter-spacing="2">${PACELAB_LABEL_LEAD}</text>
+    <text class="pl-gone" x="${PACELAB_BEAT_LEFT + PACELAB_LABEL_SHIFT}" y="${PACELAB_LABEL_Y}" fill="var(--green)" font-size="${PACELAB_LABEL_SIZE}" letter-spacing="2">${PACELAB_LABEL_TERM}</text>
+    <g class="pl-gone">${pacelabChip(PACELAB_WIND, PACELAB_CHIPS.indexOf(PACELAB_WIND), '')}</g>
+
+    <text id="pl-fly" x="${PACELAB_BEAT_LEFT}" y="${PACELAB_ODO_Y}" fill="var(--green)" font-size="${PACELAB_ODO_SIZE}" font-weight="300" letter-spacing="-3">${mmss(PACELAB_NORMALIZED.at(-1))}</text>
   </svg>`;
 
 regDemo('pacelab', {
@@ -347,16 +488,24 @@ regDemo('pacelab', {
     frame.paint(PACELAB_CHART + pacelabCaption());
   },
 
-  /* Three paints in total, and this is the first of them. `settle()` rather
-     than `sleep()`: the beat is over when its keyframes are, and the number
-     passed here is the substitute for a browser that cannot say — never a race
-     against one that can.
+  /* The whole animation, in three paints: a beat, a beat, and the landing frame
+     the runner paints afterwards — which is invisible, because beat two already
+     ends on it.
 
-     Beat two lands in the next ticket. Until it does, the runner paints the
-     landing frame straight after this, so there is a visible jump from the big
-     number to the season chart. */
+     About 7.9 seconds end to end — 3.95 and 3.75 of keyframes with the breath
+     between them. Nobody adds that up anywhere: it is what the two stylesheets
+     already say, which is the point.
+
+     `settle()` rather than `sleep()`: a beat is over when its keyframes are, and
+     the number passed here is the substitute for a browser that cannot say,
+     never a race against one that can. The 150ms is the one legitimate `sleep`
+     left — an explicit breath between the beats, which is not the length of any
+     animation and has no keyframes to drift from. */
   async play(frame) {
     frame.paint(PACELAB_BEAT_ONE + pacelabCaption('opacity:0'));
     await frame.settle(4100);
+    await frame.sleep(150);
+    frame.paint(PACELAB_BEAT_TWO + pacelabCaption(PACELAB_CAP_IN));
+    await frame.settle(4000);
   },
 });

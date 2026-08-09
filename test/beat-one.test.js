@@ -16,6 +16,7 @@
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { mountTerminal } from './harness.js';
+import { css, rule, keyframes } from './animation.js';
 
 let term;
 
@@ -68,27 +69,6 @@ async function paintedBeat(t = term) {
 function chip(frame, label) {
   return [...frame.querySelectorAll('svg g')].find(g => g.textContent.includes(label));
 }
-
-/** Everything the beat's own `<style>` block declares. */
-function css(frame) {
-  return frame.querySelector('svg style').textContent;
-}
-
-/** One rule of it, from its selector to its closing brace — nested braces and all. */
-function rule(frame, selector) {
-  const source = css(frame);
-  const start = source.indexOf(selector);
-  expect(start, `${selector} is not in the beat's stylesheet`).toBeGreaterThan(-1);
-
-  let depth = 0;
-  for (let i = source.indexOf('{', start); i < source.length; i++) {
-    if (source[i] === '{') depth++;
-    if (source[i] === '}' && --depth === 0) return source.slice(start, i + 1);
-  }
-  throw new Error(`${selector} is never closed`);
-}
-
-const keyframes = (frame, name) => rule(frame, `@keyframes ${name}`);
 
 describe('the number', () => {
   let beat;
