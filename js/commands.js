@@ -459,10 +459,6 @@ function runEasterEgg() {
 
 /* ─── Project names are commands ─── */
 
-/* Demos, by project id. A runnable project finds its demo here; one marked
-   runnable without registering a demo falls through to its info block. */
-const PROJECT_DEMOS = {};
-
 /* Every project id becomes a command, so Tab completion — which completes over
    the registry's keys — offers project names next to the built-ins for free.
    This must stay below the last `reg()` above, or a project id matching a
@@ -482,8 +478,10 @@ DATA.projects.forEach(p => {
 
   reg(p.id, (ctx) => {
     if (p.runnable) {
-      const demo = PROJECT_DEMOS[p.id];
-      if (demo) { demo(ctx); return; }
+      /* Runnability is data, the demo is code, and they meet here — at run
+         time, so `js/demos.js` can load in any order relative to this file. */
+      const demo = DEMOS[p.id];
+      if (demo) return Term.runDemo(demo, p.id);
       /* Claims to run something and can't — say so, and still show the visitor
          the project rather than nothing. */
       console.warn(`projects: '${p.id}' is marked runnable but has no demo registered — printing its info block instead`);
@@ -528,6 +526,8 @@ function wireOutputClicks() {
       return;
     }
     const cmd = e.target.dataset.cmd;
+    /* Fire and forget, and deliberately not `.catch()`-ed — see the Enter
+       branch in terminal.js. */
     if (cmd) Term.run(cmd);
   });
 }

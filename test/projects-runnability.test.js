@@ -169,14 +169,22 @@ describe('the tip line', () => {
 });
 
 describe('runnability is advertised nowhere else', () => {
-  it('is not advertised by a project printing its own block', () => {
+  it('is not advertised by a project printing its own block', async () => {
     /* The tip only prints under the list, so a marker anywhere else is a glyph
-       with nothing to explain it — the exact failure the tip exists to prevent. */
-    term.run('pacelab');
+       with nothing to explain it — the exact failure the tip exists to prevent.
+       Asked of a runnable project, since that is the one with something to
+       advertise; this one has no demo, so it falls through to its own block. */
+    const runnable = await mountTerminal({
+      projects: [{ id: 'ghost', name: 'Ghost', description: 'no demo', stack: ['Regret'], runnable: true }],
+    });
 
-    expect(nameLine(term, 'PaceLab').trim()).toBe('PaceLab');
-    expect(term.document.querySelector('#output .heat')).toBeNull();
-    expect(term.document.querySelector('#output .run-link')).toBeNull();
+    runnable.run('ghost');
+
+    expect(nameLine(runnable, 'Ghost').trim()).toBe('Ghost');
+    expect(runnable.document.querySelector('#output .heat')).toBeNull();
+    expect(runnable.document.querySelector('#output .run-link')).toBeNull();
+
+    runnable.cleanup();
   });
 
   it('is not mentioned by help, in either language', () => {

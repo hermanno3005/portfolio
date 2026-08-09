@@ -51,6 +51,12 @@ Currently working in OEM projects: prototype development, CAN bus analysis, and 
          rule starts and ends, and the German line fills it exactly. */
       projectsTip: `Tip:  cat projects/&lt;name&gt;.md · run <span class="heat">*</span> projects by name`,
 
+      /* Runner chrome — printed by the foreground-process runner, not by any
+         demo, so that no demo has to re-implement (or forget) it. `{cmd}` is
+         filled in with the command the visitor typed. */
+      demoSkipHint:  'press esc to skip',
+      demoTooNarrow: 'terminal too narrow for the animation — widen the window and run {cmd} again',
+
       neofetchRole: 'Automotive Engineer · Software',
       welcome: "Hey, nice to meet you.\nI'm Hermann, have fun looking around.",
       helpHint: "Type 'help' to see available commands.",
@@ -117,6 +123,10 @@ Derzeit in OEM-Projekten tätig: Prototypenentwicklung, CAN-Bus-Analyse und Pyth
 
       /* See the English note above. */
       projectsTip: `Tipp: cat projects/&lt;name&gt;.md · <span class="heat">*</span> Projekte per Namen starten`,
+
+      /* See the English note above. */
+      demoSkipHint:  'esc zum Überspringen',
+      demoTooNarrow: 'Terminal zu schmal für die Animation — Fenster verbreitern und {cmd} erneut ausführen',
 
       neofetchRole: 'Automotive Ingenieur · Software',
       welcome: "Hey, schön dich kennenzulernen.\nIch bin Hermann, viel Spaß beim Stöbern.",

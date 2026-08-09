@@ -36,21 +36,13 @@ describe('a project name typed as a command', () => {
     expect(term.text()).not.toContain('PaceLab');
   });
 
-  it('prints PaceLab\'s block for pacelab', () => {
-    term.run('pacelab');
-    const text = term.text();
-
-    expect(text).toContain('PaceLab');
-    expect(text).toContain('Python pipeline that strips weather and terrain out of my running data');
-    expect(text).toContain('Stack: Python · SQLite · Docker');
-    expect(text).toContain('https://github.com/hermanno3005/pacelab');
-  });
-
-  it('warns that PaceLab is runnable with no demo registered', () => {
+  it('runs the demo instead, for a project that has one', () => {
+    /* PaceLab is runnable and ships a demo, so its name is not a way to read
+       about it — it is a way to watch it. */
     term.run('pacelab');
 
-    expect(term.warnings().join('\n')).toContain('pacelab');
-    expect(term.warnings().join('\n')).toMatch(/runnable/i);
+    expect(term.document.querySelector('#output .demo-frame')).not.toBeNull();
+    expect(term.text()).not.toContain('Stack: Python · SQLite · Docker');
   });
 
   it('says nothing about runnability for a project that does not claim it', () => {
@@ -59,16 +51,19 @@ describe('a project name typed as a command', () => {
     expect(term.warnings()).toEqual([]);
   });
 
-  it('treats PaceLab and PACELAB exactly as pacelab', () => {
-    term.run('pacelab');
+  /* Asked of a project that prints rather than runs: a demo holds the terminal,
+     so three runs in a row would be one run and two no-ops — a test that passes
+     by comparing nothing to nothing. */
+  it('treats Portfolio and PORTFOLIO exactly as portfolio', () => {
+    term.run('portfolio');
     const lower = term.text();
 
     term.run('clear');
-    term.run('PaceLab');
+    term.run('Portfolio');
     const title = term.text();
 
     term.run('clear');
-    term.run('PACELAB');
+    term.run('PORTFOLIO');
     const upper = term.text();
 
     /* Only the echoed command line differs — drop it and compare the output. */
@@ -81,6 +76,44 @@ describe('a project name typed as a command', () => {
     term.run('paclab');
 
     expect(term.text()).toContain('command not found: paclab');
+  });
+});
+
+describe('a project that claims to run and cannot', () => {
+  let broken;
+
+  beforeEach(async () => {
+    broken = await mountTerminal({
+      projects: [{
+        id: 'ghost',
+        name: 'Ghost',
+        description: 'marked runnable, with no demo registered',
+        stack: ['Regret'],
+        url: 'https://example.com/ghost',
+        runnable: true,
+      }],
+    });
+  });
+
+  afterEach(() => {
+    broken.cleanup();
+  });
+
+  it('shows the visitor the project rather than nothing', () => {
+    broken.run('ghost');
+    const text = broken.text();
+
+    expect(text).toContain('Ghost');
+    expect(text).toContain('marked runnable, with no demo registered');
+    expect(text).toContain('Stack: Regret');
+    expect(text).toContain('https://example.com/ghost');
+  });
+
+  it('warns, naming the offending id', () => {
+    broken.run('ghost');
+
+    expect(broken.warnings().join('\n')).toContain('ghost');
+    expect(broken.warnings().join('\n')).toMatch(/runnable/i);
   });
 });
 
@@ -193,15 +226,15 @@ describe('a project id colliding with any command, wherever it is defined', () =
 describe('registration across a language switch', () => {
   it('still resolves the project ids, with the descriptions of the active language', () => {
     term.run('lang de');
-    term.run('pacelab');
+    term.run('portfolio');
 
-    expect(term.text()).toContain('Python-Pipeline, die Wetter und Topografie');
+    expect(term.text()).toContain('Diese terminal-basierte Portfolio-Website');
 
     term.run('clear');
     term.run('lang en');
-    term.run('pacelab');
+    term.run('portfolio');
 
-    expect(term.text()).toContain('Python pipeline that strips weather');
+    expect(term.text()).toContain('This terminal-style portfolio website');
   });
 
   it('registers each id exactly once, however often the language changes', () => {

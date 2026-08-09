@@ -15,6 +15,11 @@ const Term = (() => {
   let historyIdx  = -1;
   let savedInput  = '';
 
+  /* The foreground process, or null. A command that holds the terminal is the
+     one piece of global state on this page, and this is it: the re-entry guard,
+     the keyboard mode switch and the abort handle all read from here. */
+  let running = null;
+
   /* ── Prompt string ── */
   function promptStr() {
     const display = cwd.replace('/home/hermann', '~');
@@ -124,8 +129,18 @@ const Term = (() => {
     outputEl.appendChild(div);
   }
 
-  /* ── Run a command string ── */
-  function run(raw) {
+  /* ── Run a command string ──
+     Async because a handler may hold the terminal for several seconds; a
+     synchronous handler resolves immediately and is unaffected. The prompt
+     refresh and the final scroll therefore happen after the await, and the
+     `try/catch` — which keeps working across `await`, unlike a done-callback —
+     still wraps every exit path a handler can take. */
+  async function run(raw) {
+    /* A foreground process owns the terminal: a second command, whether typed
+       or clicked out of the scrollback, does nothing at all. Not even an echo —
+       a shell that answers while it is busy is worse than one that ignores you. */
+    if (running) return;
+
     const trimmed = raw.trim();
     echoCommand(raw);
 
@@ -140,9 +155,13 @@ const Term = (() => {
 
     if (handler) {
       try {
-        handler({ args, raw: trimmed, cwd, printText, printRaw, clear, escHtml, resolvePath, fsNode, setCwd, scrollBottom });
+        await handler({ args, raw: trimmed, cwd, printText, printRaw, clear, escHtml, resolvePath, fsNode, setCwd, scrollBottom });
       } catch (err) {
-        printRaw(`<span class="red">error: ${escHtml(String(err.message ?? err))}</span>`);
+        /* A skip is not a failure. Without this, every `Escape` would leave a
+           red line behind explaining that the visitor did something. */
+        if (!isAbort(err)) {
+          printRaw(`<span class="red">error: ${escHtml(String(err.message ?? err))}</span>`);
+        }
       }
     } else {
       printRaw(`<span class="red">command not found: ${escHtml(cmd)}</span> — type <span class="cyan">help</span> for a list of commands`);
@@ -157,8 +176,201 @@ const Term = (() => {
     refreshPrompt();
   }
 
+  /* ── Foreground processes ──
+     A demo is an object — `{ height, minCols, renderFinal(frame), play(frame,
+     signal) }` — and everything a demo would otherwise have to remember lives
+     here instead: the skip hint, click-to-skip, the width floor, the
+     unconditional landing frame, and cancellation. `play()` never draws the
+     ending, so the ending cannot depend on animation state. */
+
+  function isAbort(err) {
+    return !!err && err.name === 'AbortError';
+  }
+
+  /* One rule, three places: a click or a `Ctrl+C` that lands on a live selection
+     is a copy, and copying must never cost the visitor what they are copying. */
+  function hasSelection() {
+    return !!window.getSelection()?.toString();
+  }
+
+  function abortError() {
+    return new DOMException('the visitor skipped', 'AbortError');
+  }
+
+  /* Rejects as soon as the signal fires, and never resolves. Raced against real
+     work so a skip unwinds the demo through its own `await`s. */
+  function rejectOnAbort(signal) {
+    return new Promise((_, reject) => {
+      if (signal.aborted) { reject(abortError()); return; }
+      signal.addEventListener('abort', () => reject(abortError()), { once: true });
+    });
+  }
+
+  /* An explicit hold that is not the length of an animation. */
+  function sleep(ms, signal) {
+    return new Promise((resolve, reject) => {
+      if (signal.aborted) { reject(abortError()); return; }
+      const timer = setTimeout(resolve, ms);
+      signal.addEventListener('abort', () => { clearTimeout(timer); reject(abortError()); }, { once: true });
+    });
+  }
+
+  /* Wait for the painted element's own animations to finish, so a beat's length
+     is declared once — in the CSS — instead of once in the keyframes and again
+     in a hand-matched sleep constant that can silently drift. Retrieving
+     animations flushes style first, so calling this straight after a paint does
+     see the animations that paint just created.
+
+     `fallbackMs` is a substitute, never a race: it is consulted only when there
+     is nothing to wait on. Raced, it would win on a frozen tab and cut the beat
+     mid-flight — the exact defect this exists to remove. */
+  async function settle(el, fallbackMs, signal) {
+    const anims = typeof el.getAnimations === 'function' ? el.getAnimations({ subtree: true }) : [];
+
+    if (!anims.length) return sleep(fallbackMs, signal);
+
+    /* A cancelled animation rejects `finished`; the signal is what reports a
+       skip, so swallow it rather than dressing a repaint up as an error. */
+    await Promise.race([
+      Promise.all(anims.map(a => a.finished.catch(() => {}))),
+      rejectOnAbort(signal),
+    ]);
+  }
+
+  /* Real character width, measured at run time. Not a viewport breakpoint: the
+     font size drops from 14px to 12px under 600px, so a breakpoint would lie
+     about how many columns the visitor actually has.
+
+     Measured against the scrollback rather than the frame, because the answer
+     has to be known before anything is printed — and it is the same answer: the
+     frame is a full-width block child of exactly this box. */
+  function measureCols(el) {
+    const probe = document.createElement('span');
+    probe.textContent = '0'.repeat(10);
+    probe.style.cssText = 'position:absolute;visibility:hidden;white-space:pre';
+    el.appendChild(probe);
+    const chWidth = probe.getBoundingClientRect().width / 10;
+    probe.remove();
+
+    /* No layout to measure. Refusing to animate on a measurement we do not have
+       is the worse guess, so assume it fits. */
+    if (!chWidth || !el.clientWidth) return Infinity;
+    return Math.floor(el.clientWidth / chWidth);
+  }
+
+  /* Hand the terminal to a demo until it finishes or the visitor stops it.
+     Rejects with an `AbortError` when the visitor skips or interrupts — `run()`
+     swallows exactly that, and prints anything else as an error line. */
+  async function runDemo(demo, cmd) {
+    const ctl   = new AbortController();
+    const state = { ctl, interrupted: false };
+    running = state;
+    termEl.classList.add('term-busy');
+
+    const frameEl = document.createElement('div');
+    frameEl.className = 'output-line demo-frame';
+    /* Reserve the height up front, so inserting the frame is the only thing
+       that ever moves the viewport. */
+    if (demo.height) frameEl.style.minHeight = `${demo.height}px`;
+    /* Click/tap to skip. Deliberately not gated on pointer type: a tablet gets
+       the full terminal and no physical keyboard, so this is its only exit.
+       Gated on selection for the same reason `Ctrl+C` is — the click that ends
+       a drag-select is not a request to skip. A tap collapses any selection
+       before its click, so the coarse-pointer exit stays open. */
+    frameEl.addEventListener('click', () => {
+      if (hasSelection()) return;
+      ctl.abort();
+    });
+
+    const frame = {
+      el: frameEl,
+      paint(html) { frameEl.innerHTML = html; },
+      sleep(ms)   { return sleep(ms, ctl.signal); },
+      settle(fallbackMs) { return settle(frameEl, fallbackMs, ctl.signal); },
+    };
+
+    try {
+      const l = DATA.locales[DATA.lang];
+
+      /* Reduced motion is a deliberate setting, so it skips silently — telling
+         that visitor what they are missing reads as nagging, and the width
+         advice would be a lie besides, since widening changes nothing for them.
+         Too narrow is the one fallback that announces itself, because it is the
+         only one the visitor can fix in two seconds. */
+      const plays = !REDUCED_MOTION;
+      const narrow = plays && measureCols(outputEl) < (demo.minCols ?? 0);
+
+      if (narrow) {
+        const notice = l.demoTooNarrow.replace('{cmd}', `<span class="green">${escHtml(cmd)}</span>`);
+        printRaw(`<span class="dim">${notice}</span>`);
+      } else if (plays) {
+        printRaw(`<span class="dim">${l.demoSkipHint}</span>`);
+      }
+
+      outputEl.appendChild(frameEl);
+      scrollBottom();   /* the one and only scroll: the frame is in view, and stays */
+
+      let failure = null;
+      if (plays && !narrow) {
+        try {
+          await demo.play(frame, ctl.signal);
+        } catch (err) {
+          failure = err;
+        }
+      }
+
+      /* `Ctrl+C` is the one exit that does not land: the partial frame stays,
+         `^C` prints below it, and the prompt returns. Every other path — done,
+         skipped, tapped, too narrow, reduced motion, even a demo that threw —
+         gets the landing frame. */
+      if (state.interrupted) printRaw('^C');
+      else demo.renderFinal(frame);
+
+      if (failure) throw failure;
+    } finally {
+      running = null;
+      termEl.classList.remove('term-busy');
+      /* Keystrokes during a demo are discarded, not buffered: a prompt that
+         comes back pre-filled reads as a glitch to anyone not in on the joke. */
+      cmdInput.value = '';
+      updateMirror();
+    }
+  }
+
+  /* Keys while a demo holds the terminal. This runs on the same listener as the
+     normal prompt — the input keeps focus throughout, so there is no second
+     keyboard path to tear down on finish, skip, abort *and* error, and no leak
+     there to eat keystrokes once the prompt is back. */
+  function onBusyKeydown(e) {
+    /* Modifier-only presses and Cmd combos never skip, so selection-copy
+       survives a demo the visitor wants to quote. */
+    if (['Shift', 'Control', 'Alt', 'Meta', 'CapsLock'].includes(e.key)) return;
+    if (e.metaKey) return;
+
+    if (e.ctrlKey) {
+      /* With a selection, this Ctrl+C is a copy — that is what it means in a
+         real terminal too. */
+      if (e.key.toLowerCase() === 'c' && !hasSelection()) {
+        e.preventDefault();
+        running.interrupted = true;
+        running.ctl.abort();
+      }
+      return;
+    }
+    /* Every other Ctrl combo falls through unprevented, on purpose: `Ctrl+R`,
+       `Ctrl+T` and friends belong to the browser, and a demo is not a reason to
+       take them. It reaches no terminal binding either — `Ctrl+L` would have
+       cleared the scrollback out from under the frame. */
+
+    /* Everything else is prevented and discarded. */
+    e.preventDefault();
+    if (e.key === 'Escape') running.ctl.abort();
+  }
+
   /* ── Keyboard handling ── */
   function onKeydown(e) {
+    if (running) { onBusyKeydown(e); return; }
+
     /* Blink reset on any key */
     termEl.classList.add('typing');
     clearTimeout(termEl._blinkTimer);
@@ -168,6 +380,10 @@ const Term = (() => {
       const val = cmdInput.value;
       cmdInput.value = '';
       updateMirror();
+      /* Fire and forget: a command may hold the terminal for seconds, and this
+         listener cannot wait. Deliberately not `.catch()`-ed — `run()` already
+         prints what a visitor should see, so anything left is a bug that
+         belongs in the console. */
       run(val);
       return;
     }
@@ -286,16 +502,23 @@ const Term = (() => {
   }
 
   /* ── Init ── */
-  function init() {
+  /* The keyboard half, separate from `boot()` so a test can have key handling
+     without also starting the typewriter animation. */
+  function wireInput() {
     cmdInput.addEventListener('keydown', onKeydown);
     cmdInput.addEventListener('input', onInput);
     termEl.addEventListener('click', () => {
       /* Don't steal focus while the user is selecting text to copy */
-      if (window.getSelection()?.toString()) return;
+      if (hasSelection()) return;
       cmdInput.focus();
     });
+    cmdInput.focus();
+  }
+
+  function init() {
+    wireInput();
     boot();
   }
 
-  return { init, printText, printRaw, clear, run, tabComplete, escHtml, resolvePath, fsNode, setCwd, scrollBottom, get cwd() { return cwd; }, get _history() { return history; } };
+  return { init, wireInput, printText, printRaw, clear, run, runDemo, tabComplete, escHtml, resolvePath, fsNode, setCwd, scrollBottom, get cwd() { return cwd; }, get _history() { return history; } };
 })();

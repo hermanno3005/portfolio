@@ -19,11 +19,11 @@
  *      terminal with an empty `#output` and no pending timers, instead of one
  *      racing a ~1.5s typewriter animation.
  *
- *      The cost is that everything else in that handler is skipped too: keyboard
- *      handling, the titlebar buttons and the mobile card. The one piece tests do
- *      need — the delegated click handler for `data-url` / `data-cmd` links in the
- *      output — is a named function in commands.js, so the harness can wire just
- *      that up and leave the animation alone.
+ *      The cost is that everything else in that handler is skipped too: the
+ *      titlebar buttons and the mobile card. The two pieces tests do need — the
+ *      delegated click handler for `data-url` / `data-cmd` links, and the
+ *      keydown listener on the input — are each a named function the harness can
+ *      call on its own, leaving the animation alone.
  *
  * Scripts must be <script> elements rather than `window.eval()`: the modules are
  * declared with top-level `const`, which lands in the realm's global lexical
@@ -39,10 +39,15 @@ import { JSDOM, VirtualConsole } from 'jsdom';
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
 /* Load order matters — see the note above. */
-const SCRIPTS = ['js/data.js', 'js/terminal.js', 'js/commands.js'];
+const SCRIPTS = ['js/data.js', 'js/terminal.js', 'js/commands.js', 'js/demos.js'];
 
 const indexHtml = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
-const sources = SCRIPTS.map(rel => fs.readFileSync(path.join(ROOT, rel), 'utf8'));
+
+const sourceCache = new Map();
+function sourceOf(rel) {
+  if (!sourceCache.has(rel)) sourceCache.set(rel, fs.readFileSync(path.join(ROOT, rel), 'utf8'));
+  return sourceCache.get(rel);
+}
 
 /**
  * Boot a fresh terminal in its own jsdom realm.
@@ -56,8 +61,12 @@ const sources = SCRIPTS.map(rel => fs.readFileSync(path.join(ROOT, rel), 'utf8')
  * used verbatim: the locale descriptions are applied by index at boot and would
  * overwrite it, so a mounted test list keeps the descriptions it was given until
  * something runs `lang`.
+ *
+ * `reducedMotion` makes `prefers-reduced-motion: reduce` match, the way a
+ * visitor's OS setting does. `scripts` replaces the load order, for the tests
+ * that ask whether the order matters.
  */
-export async function mountTerminal({ projects } = {}) {
+export async function mountTerminal({ projects, reducedMotion = false, scripts = SCRIPTS } = {}) {
   const scriptErrors = [];
   const warnings = [];
   const virtualConsole = new VirtualConsole();
@@ -78,11 +87,11 @@ export async function mountTerminal({ projects } = {}) {
   });
 
   /* jsdom has no matchMedia; every browser does, and terminal.js reads it at parse time.
-     Nothing matches — the same answer a browser gives with no preference set. A test
-     that needs a media query to match should widen this, not stub it per-test. */
+     Nothing matches by default — the same answer a browser gives with no preference set.
+     A test that needs a media query to match should widen this, not stub it per-test. */
   window.matchMedia = query => ({
     media: query,
-    matches: false,
+    matches: reducedMotion && query.includes('prefers-reduced-motion'),
     onchange: null,
     addEventListener() {},
     removeEventListener() {},
@@ -91,21 +100,21 @@ export async function mountTerminal({ projects } = {}) {
     dispatchEvent: () => false,
   });
 
-  for (const [i, source] of sources.entries()) {
+  for (const rel of scripts) {
     const el = window.document.createElement('script');
-    el.textContent = source;
+    el.textContent = sourceOf(rel);
     window.document.body.appendChild(el);
 
     /* jsdom swallows script exceptions — without this, a broken file would only
        show up later as a baffling "Term is not defined". */
     if (scriptErrors.length) {
-      throw new Error(`${SCRIPTS[i]} threw while loading: ${scriptErrors[0].message}`);
+      throw new Error(`${rel} threw while loading: ${scriptErrors[0].message}`);
     }
 
     /* Swap the project list in before anything derived from it is built. The
        rebuild goes through `_initFs()` rather than `setLang()`, which would
        re-apply the locale descriptions over the list the test just supplied. */
-    if (projects && SCRIPTS[i] === 'js/data.js') {
+    if (projects && rel === 'js/data.js') {
       window.eval(`DATA.projects = ${JSON.stringify(projects)}; DATA._initFs();`);
     }
   }
@@ -117,16 +126,70 @@ export async function mountTerminal({ projects } = {}) {
   /* Render the prompt the way the boot sequence would, without running it. */
   Term.setCwd(Term.cwd);
 
-  /* The one piece of the DOM-ready block tests need — see the note above. */
+  /* The two pieces of the DOM-ready block tests need — see the note above.
+     `Term.wireInput()` is the keyboard half of `Term.init()`, split out for the
+     same reason `wireOutputClicks()` was: it lets a test have key handling
+     without also starting the boot animation. */
   window.eval('wireOutputClicks()');
+  window.eval('Term.wireInput()');
+
+  const cmdInput = window.document.getElementById('cmd-input');
 
   return {
     document: window.document,
 
-    /** Type a command, exactly as a visitor would. */
+    /**
+     * Type a command, exactly as a visitor would.
+     *
+     * `Term.run()` is async since the foreground-process mechanism landed, so
+     * this returns a promise. A synchronous command still finishes before the
+     * call returns — only the prompt refresh after it is deferred a microtask —
+     * so tests that drive nothing long-running need not await.
+     */
     run(cmd) {
-      Term.run(cmd);
+      return Term.run(cmd);
     },
+
+    /** Press a key, exactly as a visitor would: on the real input, which holds focus. */
+    press(key, init = {}) {
+      const e = new window.KeyboardEvent('keydown', { key, bubbles: true, cancelable: true, ...init });
+      cmdInput.dispatchEvent(e);
+      return e;
+    },
+
+    /** Type into the input the way a keystroke would, mirror and all. */
+    type(value) {
+      cmdInput.value = value;
+      cmdInput.dispatchEvent(new window.Event('input', { bubbles: true }));
+    },
+
+    /** What the input currently holds — a returning prompt must never be pre-filled. */
+    inputValue() {
+      return cmdInput.value;
+    },
+
+    /** Register a demo, exactly as `js/demos.js` does. */
+    regDemo(id, demo) {
+      window.eval('regDemo')(id, demo);
+    },
+
+    /** The element a running demo owns, or null when nothing is running. */
+    frame() {
+      return window.document.querySelector('#output .demo-frame');
+    },
+
+    /** True while a command is holding the terminal. */
+    busy() {
+      return window.document.getElementById('terminal').classList.contains('term-busy');
+    },
+
+    /** Let queued microtasks and zero-delay timers run. */
+    flush() {
+      return new Promise(resolve => window.setTimeout(resolve, 0));
+    },
+
+    /** The realm's own window — for tests that must reach past the terminal. */
+    window,
 
     /** Click something in the output, exactly as a visitor would. */
     click(el) {

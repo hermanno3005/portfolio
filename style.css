@@ -250,6 +250,26 @@ html, body {
 /* Cursor solid while typing */
 #terminal.typing #cursor { animation: none; background: var(--cursor); color: var(--bg); }
 
+/* ── Demo frame ──
+   The element a foreground process owns. Its height is reserved inline, from
+   the demo's own declared height, so nothing below it moves once it lands. */
+.demo-frame   { white-space: normal; }
+.demo-caption { line-height: 1.5; }
+
+/* ── A command holding the terminal ──
+   `visibility`/`opacity`, never `display`: the input line has to keep its layout
+   box so the real input keeps focus. That input is the site's only keyboard
+   path, and the runner listens on it — hiding the line would blur it and take
+   `Escape` with it. */
+#terminal.term-busy #prompt-display { visibility: hidden; }
+#terminal.term-busy #cursor         { opacity: 0; }
+
+/* A dead click is worse than an obviously-disabled one, so the scrollback stops
+   answering — except the demo's own frame, where a click is how a visitor with
+   no keyboard skips. */
+#terminal.term-busy #output      { pointer-events: none; }
+#terminal.term-busy .demo-frame  { pointer-events: auto; cursor: pointer; }
+
 /* ── Sudo prompt ── */
 #sudo-prompt {
   display: flex;
