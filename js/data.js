@@ -36,8 +36,10 @@ Currently working in OEM projects: prototype development, CAN bus analysis, and 
   Type 'open github' to open GitHub in a new tab.`,
 
       projectDescriptions: [
-        'This terminal-style portfolio website — Ghostty-themed, vanilla JS, hosted on Cloudflare.',
-        /* TODO: verify wording, then uncomment together with the projects below.
+        'Python pipeline that strips weather and terrain out of my running data to show the fitness trend underneath - built on the intervals.icu and Open-Meteo APIs.',
+        'This terminal-style portfolio website - Ghostty-themed, vanilla JS, hosted on Cloudflare.',
+        /* TODO: verify wording — and replace the em-dashes with plain hyphens, as the
+           active entries above do — then uncomment together with the projects below.
         'Self-hosted home server on a Raspberry Pi — Docker stack with Home Assistant, Matter server and OpenThread Border Router for a Matter-over-Thread smart home.',
         'Claude-powered personal training coach with access to my full workout history via the COROS API.',
         'Data logger based on the HUAdapter Gen 2 for evaluating automated driving functions — built as my Diplomarbeit at TU Dresden.', */
@@ -97,8 +99,10 @@ Derzeit in OEM-Projekten tätig: Prototypenentwicklung, CAN-Bus-Analyse und Pyth
   Tippe 'open github' um GitHub in einem neuen Tab zu öffnen.`,
 
       projectDescriptions: [
-        'Diese terminal-basierte Portfolio-Website — Ghostty-Design, reines JavaScript, gehostet auf Cloudflare.',
-        /* TODO: verify wording, then uncomment together with the projects below.
+        'Python-Pipeline, die Wetter und Topografie aus meinen Laufdaten herausrechnet und den Fitness-Trend darunter sichtbar macht - auf Basis der APIs von intervals.icu und Open-Meteo.',
+        'Diese terminal-basierte Portfolio-Website - Ghostty-Design, reines JavaScript, gehostet auf Cloudflare.',
+        /* TODO: verify wording — and replace the em-dashes with plain hyphens, as the
+           active entries above do — then uncomment together with the projects below.
         'Selbst gehosteter Home-Server auf einem Raspberry Pi — Docker-Stack mit Home Assistant, Matter-Server und OpenThread Border Router für ein Matter-over-Thread Smart Home.',
         'Claude-basierter Personal-Trainer mit Zugriff auf meine komplette Trainingshistorie über die COROS-API.',
         'Datenlogger auf Basis des HUAdapter Gen 2 zur Bewertung automatisierter Fahrfunktionen — entstanden als Diplomarbeit an der TU Dresden.', */
@@ -132,6 +136,14 @@ Derzeit in OEM-Projekten tätig: Prototypenentwicklung, CAN-Bus-Analyse und Pyth
   },
 
   projects: [
+    {
+      id: 'pacelab',
+      name: 'PaceLab',
+      description: 'normalized pace from grade, heat and wind',
+      stack: ['Python', 'SQLite', 'Docker'],
+      url: 'https://github.com/hermanno3005/pacelab',
+      runnable: true,
+    },
     {
       id: 'portfolio',
       name: 'portfolio',
