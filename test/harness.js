@@ -103,7 +103,9 @@ export async function mountTerminal({ projects } = {}) {
       throw new Error(`${SCRIPTS[i]} threw while loading: ${scriptErrors[0].message}`);
     }
 
-    /* Swap the project list in before anything derived from it is built. */
+    /* Swap the project list in before anything derived from it is built. The
+       rebuild goes through `_initFs()` rather than `setLang()`, which would
+       re-apply the locale descriptions over the list the test just supplied. */
     if (projects && SCRIPTS[i] === 'js/data.js') {
       window.eval(`DATA.projects = ${JSON.stringify(projects)}; DATA._initFs();`);
     }

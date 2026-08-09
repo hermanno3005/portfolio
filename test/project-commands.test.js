@@ -148,6 +148,48 @@ describe('a project id that collides with a command name', () => {
   });
 });
 
+describe('a project id colliding with any command, wherever it is defined', () => {
+  /* Every built-in, not just the ones that happen to be defined early: a guard
+     that runs mid-file would wave these through and let the later definition
+     overwrite them — the silent shadowing the loud check exists to prevent. */
+  const BUILT_INS = [
+    'help', 'whoami', 'about', 'pwd', 'ls', 'cd', 'cat', 'open', 'projects',
+    'skills', 'contact', 'clear', 'echo', 'history', 'uname', 'neofetch',
+    'man', 'lang', 'sudo',
+  ];
+
+  it.each(BUILT_INS)('warns about the id %s', async (id) => {
+    const colliding = await mountTerminal({
+      projects: [{ id, name: `${id} project`, description: 'shadowing', stack: ['Regret'] }],
+    });
+
+    try {
+      expect(colliding.warnings().join('\n')).toContain(`'${id}'`);
+    } finally {
+      colliding.cleanup();
+    }
+  });
+
+  /* `help` above covers a built-in defined before the projects; `clear` is
+     defined after them, and wipes the screen so it is unmistakable which
+     handler ran. */
+  it('keeps a built-in that is defined after the projects are registered', async () => {
+    const colliding = await mountTerminal({
+      projects: [{ id: 'clear', name: 'clear project', description: 'shadowing', stack: ['Regret'] }],
+    });
+
+    try {
+      colliding.run('whoami');
+      expect(colliding.text()).toContain('Hermann Aust');
+
+      colliding.run('clear');
+      expect(colliding.text()).toBe('');
+    } finally {
+      colliding.cleanup();
+    }
+  });
+});
+
 describe('registration across a language switch', () => {
   it('still resolves the project ids, with the descriptions of the active language', () => {
     term.run('lang de');
