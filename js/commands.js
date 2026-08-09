@@ -156,17 +156,54 @@ reg('open', ({ args, printRaw, escHtml }) => {
 });
 
 /* ─── projects ─── */
+
+/* One project, as the projects list renders it — also what a project's own
+   command prints, so the two can never describe the same project differently. */
+function printProjectBlock(p, printRaw, escHtml) {
+  printRaw(`  <span class="green bold">${escHtml(p.name)}</span>`);
+  printRaw(`  <span class="dim">${escHtml(p.description)}</span>`);
+  printRaw(`  Stack: <span class="cyan">${p.stack.map(escHtml).join(' · ')}</span>`);
+  if (p.url) printRaw(`  URL:   <span class="link" data-url="${escHtml(p.url)}">${escHtml(p.url)}</span>`);
+}
+
 reg('projects', ({ printRaw, escHtml }) => {
   printRaw(`<span class="cyan bold">Projects</span>`);
   printRaw(`<span class="dim">───────────────────────────────────────────────────────────</span>`);
   DATA.projects.forEach(p => {
-    printRaw(`  <span class="green bold">${escHtml(p.name)}</span>`);
-    printRaw(`  <span class="dim">${escHtml(p.description)}</span>`);
-    printRaw(`  Stack: <span class="cyan">${p.stack.map(escHtml).join(' · ')}</span>`);
-    if (p.url) printRaw(`  URL:   <span class="link" data-url="${escHtml(p.url)}">${escHtml(p.url)}</span>`);
+    printProjectBlock(p, printRaw, escHtml);
     printRaw('');
   });
   printRaw(`<span class="dim">  Tip: cat projects/&lt;name&gt;.md for details</span>`);
+});
+
+/* ─── Project names are commands ─── */
+
+/* Demos, by project id. A runnable project finds its demo here; one that is
+   marked runnable without registering a demo falls through to its info block. */
+const PROJECT_DEMOS = {};
+
+/* Every project id becomes a command, so Tab completion — which completes over
+   the registry's keys — offers project names next to the built-ins for free.
+   Runs once, at load; `lang` rebuilds the derived content but mutates the same
+   project objects in place, so the handlers below stay current without
+   re-registering. */
+DATA.projects.forEach(p => {
+  if (COMMANDS[p.id]) {
+    /* Author-time mistake in a four-entry hand-edited file: the built-in keeps
+       the name, because silently shadowing `open` or `cat` is the one outcome
+       no visitor could diagnose. */
+    console.warn(`projects: id '${p.id}' collides with an existing command — project skipped, built-in kept`);
+    return;
+  }
+
+  reg(p.id, (ctx) => {
+    if (p.runnable) {
+      const demo = PROJECT_DEMOS[p.id];
+      if (demo) { demo(ctx); return; }
+      console.warn(`projects: '${p.id}' is marked runnable but has no demo registered — printing its info block instead`);
+    }
+    printProjectBlock(p, ctx.printRaw, ctx.escHtml);
+  });
 });
 
 /* ─── skills ─── */

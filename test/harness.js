@@ -50,11 +50,20 @@ const sources = SCRIPTS.map(rel => fs.readFileSync(path.join(ROOT, rel), 'utf8')
  *
  * Every call gets a brand new realm, so `DATA.lang`, `cwd`, the command history
  * and `#output` all start clean and nothing leaks between tests.
+ *
+ * `projects` replaces `DATA.projects` after data.js has run and before the rest
+ * of the site sees it — the seam a test needs to ask what an *authoring* mistake
+ * does, since the real list is hand-edited and correct. The replacement list is
+ * used verbatim: the locale descriptions are applied by index at boot and would
+ * overwrite it, so a mounted test list keeps the descriptions it was given until
+ * something runs `lang`.
  */
-export async function mountTerminal() {
+export async function mountTerminal({ projects } = {}) {
   const scriptErrors = [];
+  const warnings = [];
   const virtualConsole = new VirtualConsole();
   virtualConsole.on('jsdomError', err => scriptErrors.push(err));
+  virtualConsole.on('warn', (...args) => warnings.push(args.join(' ')));
 
   const dom = new JSDOM(indexHtml, {
     url: 'https://hermann-aust.com/',
@@ -93,6 +102,11 @@ export async function mountTerminal() {
     if (scriptErrors.length) {
       throw new Error(`${SCRIPTS[i]} threw while loading: ${scriptErrors[0].message}`);
     }
+
+    /* Swap the project list in before anything derived from it is built. */
+    if (projects && SCRIPTS[i] === 'js/data.js') {
+      window.eval(`DATA.projects = ${JSON.stringify(projects)}; DATA._initFs();`);
+    }
   }
 
   /* Global lexical bindings are not properties of `window`; a global eval reads them. */
@@ -108,6 +122,16 @@ export async function mountTerminal() {
     /** Type a command, exactly as a visitor would. */
     run(cmd) {
       Term.run(cmd);
+    },
+
+    /** Press Tab on a half-typed line; returns the line as it is left behind. */
+    complete(value) {
+      return Term.tabComplete(value);
+    },
+
+    /** Everything the page has warned about since it booted. */
+    warnings() {
+      return [...warnings];
     },
 
     /** The output lines, as a visitor reads them. */

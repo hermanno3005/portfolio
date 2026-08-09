@@ -297,5 +297,5 @@ const Term = (() => {
     boot();
   }
 
-  return { init, printText, printRaw, clear, run, escHtml, resolvePath, fsNode, setCwd, scrollBottom, get cwd() { return cwd; }, get _history() { return history; } };
+  return { init, printText, printRaw, clear, run, tabComplete, escHtml, resolvePath, fsNode, setCwd, scrollBottom, get cwd() { return cwd; }, get _history() { return history; } };
 })();
