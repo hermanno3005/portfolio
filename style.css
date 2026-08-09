@@ -254,7 +254,11 @@ html, body {
    The element a foreground process owns. Its height is reserved inline, from
    the demo's own declared height, so nothing below it moves once it lands. */
 .demo-frame   { white-space: normal; }
-.demo-caption { line-height: 1.5; }
+/* The chart scales with the terminal, never past 1:1 — its viewBox is already
+   the content width at the 900px window cap, so `width: 100%` only ever shrinks
+   it, and the reserved height stays an upper bound. */
+.demo-frame svg { display: block; width: 100%; height: auto; }
+.demo-caption { line-height: 1.5; margin-top: 5px; }
 
 /* ── A command holding the terminal ──
    `visibility`/`opacity`, never `display`: the input line has to keep its layout
