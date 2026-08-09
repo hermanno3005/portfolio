@@ -234,6 +234,19 @@ Derzeit in OEM-Projekten tätig: Prototypenentwicklung, CAN-Bus-Analyse und Pyth
     };
 
     this.projects.forEach(p => {
+      /* A runnable project owns two nodes: the executable and the document
+         about it. Runnability lives on the executable, never on the markdown —
+         that file is a document, and an executable document is nonsense.
+         Pushed before its document: `ls` prints children in insertion order, and
+         this is the order a real one would sort them into. */
+      if (p.runnable) {
+        this.fs['/home/hermann/projects'].children.push(p.id);
+        this.fs[`/home/hermann/projects/${p.id}`] = {
+          type: 'file',
+          exec: p.id,   /* the command it runs when a visitor cats or clicks it */
+        };
+      }
+
       const path = `/home/hermann/projects/${p.id}.md`;
       this.fs['/home/hermann/projects'].children.push(`${p.id}.md`);
       this.fs[path] = {

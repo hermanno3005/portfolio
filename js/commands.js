@@ -17,6 +17,24 @@ reg('about',  aboutFn);
 /* ─── pwd ─── */
 reg('pwd', ({ cwd, printText }) => printText(cwd));
 
+/* The `*` marking something runnable — one glyph, one colour, wherever it
+   appears, so the projects tip that explains it there still explains it here.
+   Pass a command to make it a tap target; a directory listing names things
+   rather than offering to run them, so it leaves the marker inert. */
+function runMarker(cmd) {
+  return cmd
+    ? `<span class="heat run-link" data-cmd="${cmd}">*</span>`
+    : `<span class="heat">*</span>`;
+}
+
+/* A file a real terminal would refuse to print: name the action instead, and
+   make it clickable. Green underline runs something, cyan underline goes
+   somewhere — see the note on `.run-link` in style.css. */
+function binaryFileLine(label, cmd, tail, { runs = false } = {}) {
+  const cls = runs ? 'green run-link' : 'cyan link';
+  return `<span class="dim">Binary file — </span><span class="${cls}" data-cmd="${cmd}">${label}</span><span class="dim"> ${tail}</span>`;
+}
+
 /* ─── ls ─── */
 reg('ls', ({ args, cwd, printRaw, resolvePath, fsNode, escHtml }) => {
   const target = args[0] ? resolvePath(args[0]) : cwd;
@@ -35,7 +53,9 @@ reg('ls', ({ args, cwd, printRaw, resolvePath, fsNode, escHtml }) => {
     const childPath = target + '/' + name;
     const child     = fsNode(childPath);
     const isDir     = child && child.type === 'dir';
-    return `<span class="${isDir ? 'cyan bold' : 'fg'}">${escHtml(name)}${isDir ? '/' : ''}</span>`;
+    /* `ls -F` style, but warm rather than dircolors' green — see `runMarker`. */
+    const marker = child && child.exec ? runMarker() : '';
+    return `<span class="${isDir ? 'cyan bold' : 'fg'}">${escHtml(name)}${isDir ? '/' : ''}</span>${marker}`;
   });
 
   printRaw(items.join('  ') || '<span class="dim">(empty)</span>');
@@ -75,8 +95,13 @@ reg('cat', ({ args, cwd, printRaw, printText, resolvePath, fsNode, escHtml }) =>
     printRaw(`<span class="red">cat: ${escHtml(args[0])}: Is a directory</span>`);
     return;
   }
+  if (node.exec) {
+    const id = escHtml(node.exec);
+    printRaw(binaryFileLine(id, id, 'to run it.', { runs: true }));
+    return;
+  }
   if (node.content === '__CV__') {
-    printRaw(`<span class="dim">Binary file — </span><span class="cyan link" data-cmd="open cv">open cv.pdf</span><span class="dim"> to download (English or German).</span>`);
+    printRaw(binaryFileLine('open cv.pdf', 'open cv', 'to download (English or German).'));
     return;
   }
 
@@ -170,13 +195,13 @@ function printProjectBlock(p, { printRaw, escHtml }, { advertise = false } = {})
   } else {
     /* Green already meant "you can type this" everywhere else on the site, and a
        project name now is one; the underline says so without a hover state. The
-       `*` is `ls -F` style — attached, and warm rather than green, because a green
-       marker hanging off a green bold name is what an eye slides past. It carries
-       the command too: the tip sends the visitor hunting for the `*`, so on a
-       tablet the `*` is what they will tap. */
-    const cmd = `data-cmd="${escHtml(p.id)}"`;
-    const marker = p.runnable ? `<span class="heat run-link" ${cmd}>*</span>` : '';
-    printRaw(`  <span class="green bold run-link" ${cmd}>${name}</span>${marker}`);
+       marker is warm rather than green — a green `*` hanging off a green bold
+       name is what an eye slides past — and carries the command too: the tip
+       sends the visitor hunting for the `*`, so on a tablet that is what they
+       will tap. */
+    const id = escHtml(p.id);
+    const marker = p.runnable ? runMarker(id) : '';
+    printRaw(`  <span class="green bold run-link" data-cmd="${id}">${name}</span>${marker}`);
   }
   printRaw(`  <span class="dim">${escHtml(p.description)}</span>`);
   printRaw(`  Stack: <span class="cyan">${p.stack.map(escHtml).join(' · ')}</span>`);
