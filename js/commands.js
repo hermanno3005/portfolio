@@ -310,39 +310,6 @@ reg('neofetch', ({ printRaw }) => {
   printRaw(html);
 });
 
-/* ─── man ─── */
-reg('man', ({ args, printRaw, escHtml }) => {
-  const cmd = args[0];
-  if (!cmd) { printRaw('<span class="red">man: what manual page do you want?</span>'); return; }
-
-  const pages = {
-    help:     'help — list all available commands and keyboard shortcuts',
-    whoami:   'whoami — display information about Hermann Aust',
-    about:    'about — alias for whoami',
-    ls:       'ls [path] — list contents of a directory in the virtual filesystem',
-    cd:       'cd [path] — change the current directory (supports ~, .., absolute paths)',
-    cat:      'cat &lt;file&gt; — display the contents of a file',
-    pwd:      'pwd — print the current working directory',
-    open:     'open &lt;target&gt; — open a URL or download the CV. Targets: github, linkedin, cv (cv en / cv de)',
-    projects: 'projects — list all portfolio projects with descriptions and links',
-    skills:   'skills — display the full skill set and tech stack',
-    contact:  'contact — show contact information and social links',
-    neofetch: 'neofetch — display system info and ASCII art, terminal style',
-    uname:    'uname [-a] — print system information (harmlessly fake)',
-    echo:     'echo &lt;text&gt; — print text to the terminal',
-    history:  'history — show the session command history',
-    clear:    'clear — clear all output from the terminal',
-    man:      'man &lt;command&gt; — display this manual page for a given command',
-  };
-
-  if (pages[cmd]) {
-    printRaw(`<span class="bold">NAME</span>`);
-    printRaw(`    ${pages[cmd]}`);
-  } else {
-    printRaw(`<span class="red">man: no manual entry for '${escHtml(cmd)}'</span>`);
-  }
-});
-
 /* ─── lang ─── */
 reg('lang', ({ args, printRaw, escHtml }) => {
   const target = (args[0] || '').toLowerCase();

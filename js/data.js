@@ -76,7 +76,6 @@ Currently working in OEM projects: prototype development, CAN bus analysis, and 
   <span class="green">uname</span>       · Kernel/system info
   <span class="green">echo</span>        · Print text
   <span class="green">history</span>     · Show command history
-  <span class="green">man</span>         · Show manual for a command
   <span class="green">lang</span>        · Switch language  (lang de / lang en)
   <span class="green">clear</span>       · Clear the terminal
 <span class="dim">───────────────────────────────────────────────────────────</span>
@@ -147,7 +146,6 @@ Derzeit in OEM-Projekten tätig: Prototypenentwicklung, CAN-Bus-Analyse und Pyth
   <span class="green">uname</span>       · Kernel-/Systeminfo
   <span class="green">echo</span>        · Text ausgeben
   <span class="green">history</span>     · Befehlsverlauf anzeigen
-  <span class="green">man</span>         · Handbuch für einen Befehl
   <span class="green">lang</span>        · Sprache wechseln  (lang de / lang en)
   <span class="green">clear</span>       · Terminal leeren
 <span class="dim">───────────────────────────────────────────────────────────</span>

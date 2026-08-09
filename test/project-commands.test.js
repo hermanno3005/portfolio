@@ -188,7 +188,7 @@ describe('a project id colliding with any command, wherever it is defined', () =
   const BUILT_INS = [
     'help', 'whoami', 'about', 'pwd', 'ls', 'cd', 'cat', 'open', 'projects',
     'skills', 'contact', 'clear', 'echo', 'history', 'uname', 'neofetch',
-    'man', 'lang', 'sudo',
+    'lang', 'sudo',
   ];
 
   it.each(BUILT_INS)('warns about the id %s', async (id) => {
