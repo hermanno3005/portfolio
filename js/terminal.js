@@ -215,6 +215,13 @@ const Term = (() => {
     });
   }
 
+  /* Everything animating inside the frame, or nothing where the API is absent —
+     the one place that question is asked, since three callers need the same
+     answer and jsdom answers none of them. */
+  function animationsOf(el) {
+    return typeof el.getAnimations === 'function' ? el.getAnimations({ subtree: true }) : [];
+  }
+
   /* Wait for the painted element's own animations to finish, so a beat's length
      is declared once — in the CSS — instead of once in the keyframes and again
      in a hand-matched sleep constant that can silently drift. Retrieving
@@ -225,7 +232,7 @@ const Term = (() => {
      is nothing to wait on. Raced, it would win on a frozen tab and cut the beat
      mid-flight — the exact defect this exists to remove. */
   async function settle(el, fallbackMs, signal) {
-    const anims = typeof el.getAnimations === 'function' ? el.getAnimations({ subtree: true }) : [];
+    const anims = animationsOf(el);
 
     if (!anims.length) return sleep(fallbackMs, signal);
 
@@ -246,8 +253,60 @@ const Term = (() => {
      Paused rather than cancelled: cancelling reverts the frame to its
      unanimated state and throws away the very thing being kept. */
   function freeze(el) {
-    if (typeof el.getAnimations !== 'function') return;
-    for (const anim of el.getAnimations({ subtree: true })) anim.pause();
+    for (const anim of animationsOf(el)) anim.pause();
+  }
+
+  /* Hold a beat where the visitor left it when they leave the tab.
+
+     A hidden tab stops ticking animations but its document timeline runs on
+     underneath, so the first rendering update on return re-syncs every
+     animation to real elapsed time. Measured in Safari 18: `currentTime` pinned
+     for 11s hidden, then a 16.1s jump the moment the tab came back — a beat one
+     second in arrives already finished, and the visitor returns to the landing
+     frame having seen none of it. Not a skip they asked for, and the one exit
+     nobody chose.
+
+     Pausing is what fixes it rather than any amount of re-timing: a paused
+     animation's `currentTime` is held against the timeline, so there is nothing
+     left to re-sync. `settle()` is still waiting on `finished`, which a paused
+     animation does not resolve, so the demo waits for the visitor rather than
+     running on without them.
+
+     What it paused is what it resumes, and nothing else — tracked rather than
+     re-derived. Two reasons, and each is a bug on its own: `play()` on an
+     animation that finished while paused rewinds it to the start, and `Ctrl+C`
+     freezes the frame on purpose, so a blanket resume would undo an interrupt
+     the moment the visitor changed tabs. */
+  function suspendWhileHidden(el) {
+    const held = new Set();
+
+    function resume() {
+      for (const anim of held) if (anim.playState === 'paused') anim.play();
+      held.clear();
+    }
+
+    function apply() {
+      if (!document.hidden) { resume(); return; }
+      for (const anim of animationsOf(el)) {
+        if (anim.playState === 'running') { anim.pause(); held.add(anim); }
+      }
+    }
+
+    document.addEventListener('visibilitychange', apply);
+
+    /* Letting go resumes whatever is still held: nothing may be left paused with
+       no listener remaining to revive it. Today's demo cannot reach that —
+       `settle()` blocks while a beat is paused, so a run cannot end mid-hold —
+       but this runner is the contract every future long-running command is
+       written against, and one that ends on `sleep()` rather than `settle()`
+       finishes on its own clock and would leave a frame frozen for good. */
+    return {
+      apply,
+      release() {
+        document.removeEventListener('visibilitychange', apply);
+        resume();
+      },
+    };
   }
 
   /* Real character width, measured at run time. Not a viewport breakpoint: the
@@ -295,9 +354,14 @@ const Term = (() => {
       ctl.abort();
     });
 
+    const visibility = suspendWhileHidden(frameEl);
+
     const frame = {
       el: frameEl,
-      paint(html) { frameEl.innerHTML = html; },
+      /* Synced after every paint, not only on `visibilitychange`: a visitor who
+         leaves during beat one is already gone when beat two paints, so there is
+         no event left to hear and the new beat would start into a hidden tab. */
+      paint(html) { frameEl.innerHTML = html; visibility.apply(); },
       sleep(ms)   { return sleep(ms, ctl.signal); },
       settle(fallbackMs) { return settle(frameEl, fallbackMs, ctl.signal); },
     };
@@ -336,11 +400,16 @@ const Term = (() => {
          `^C` prints below it, and the prompt returns. Every other path — done,
          skipped, tapped, too narrow, reduced motion, even a demo that threw —
          gets the landing frame. */
-      if (state.interrupted) { freeze(frameEl); printRaw('^C'); }
+      /* Let go of the tab watcher *before* freezing, never after: `release()`
+         resumes whatever it is still holding, and the `finally` below runs once
+         this branch is done — the other order would hand the visitor a frame
+         that starts moving again one line under their own `^C`. */
+      if (state.interrupted) { visibility.release(); freeze(frameEl); printRaw('^C'); }
       else demo.renderFinal(frame);
 
       if (failure) throw failure;
     } finally {
+      visibility.release();
       running = null;
       termEl.classList.remove('term-busy');
       /* Keystrokes during a demo are discarded, not buffered: a prompt that

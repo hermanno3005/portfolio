@@ -557,6 +557,154 @@ describe('the frame surface', () => {
   });
 });
 
+describe('a tab the visitor leaves', () => {
+  /* Why pausing at all is `suspendWhileHidden` in js/terminal.js. What these
+     pin is that it pauses only what was running, resumes only what it paused,
+     and never leaves anything paused with nobody left to revive it. */
+
+  /* The Web Animations objects jsdom does not have. Only the members the runner
+     touches, so a test can say what state each one is in. */
+  function fakeAnimation(playState = 'running') {
+    return {
+      playState,
+      finished: new Promise(() => {}),
+      pause() { this.playState = 'paused'; },
+      play()  { this.playState = 'running'; },
+    };
+  }
+
+  function setHidden(hidden) {
+    Object.defineProperty(term.window.document, 'hidden', { value: hidden, configurable: true });
+    term.window.document.dispatchEvent(new term.window.Event('visibilitychange'));
+  }
+
+  /**
+   * A demo parked mid-beat, with `onStart` run the moment `play()` is on screen.
+   * The common case is just hanging animations off the frame, so that is what
+   * `anims` does; a test that needs to paint from inside the beat passes its own.
+   */
+  async function midBeat({ anims, onStart } = {}) {
+    let unpark;
+    const parked = new Promise(r => { unpark = r; });
+    const demo = await startDemo(term, {
+      onPlay: async (frame) => {
+        if (onStart) onStart(frame);
+        else frame.el.getAnimations = () => anims;
+        /* Raced against the runner's own primitive so a skip unwinds the beat,
+           exactly as the default stand-in does — these tests interrupt too. */
+        await Promise.race([parked, frame.sleep(60000)]);
+      },
+    });
+    return { ...demo, finish: () => unpark() };
+  }
+
+  it('pauses the beat where it stands when the visitor leaves', async () => {
+    const anims = [fakeAnimation(), fakeAnimation()];
+    const { done, finish } = await midBeat({ anims });
+
+    setHidden(true);
+
+    expect(anims.map(a => a.playState)).toEqual(['paused', 'paused']);
+
+    finish();
+    await done;
+  });
+
+  it('resumes it from there when the visitor comes back', async () => {
+    const anims = [fakeAnimation(), fakeAnimation()];
+    const { done, finish } = await midBeat({ anims });
+
+    setHidden(true);
+    setHidden(false);
+
+    expect(anims.map(a => a.playState)).toEqual(['running', 'running']);
+
+    finish();
+    await done;
+  });
+
+  /* `play()` on an animation that is both finished and paused rewinds it to the
+     start — so the one that ended while the visitor was away would replay on
+     their return, which is the same defect from the other end. */
+  it('leaves an animation that ended while away alone, rather than rewinding it', async () => {
+    const anims = [fakeAnimation(), fakeAnimation()];
+    const { done, finish } = await midBeat({ anims });
+
+    setHidden(true);
+    anims[1].playState = 'finished';
+    setHidden(false);
+
+    expect(anims.map(a => a.playState)).toEqual(['running', 'finished']);
+
+    finish();
+    await done;
+  });
+
+  /* The visitor who leaves during beat one: beat two paints into a tab that is
+     already hidden, so there is no `visibilitychange` left to hear. */
+  it('pauses a beat that paints while the tab is already hidden', async () => {
+    const anims = [fakeAnimation()];
+    const { done, finish } = await midBeat({
+      onStart: (frame) => {
+        setHidden(true);
+        frame.el.getAnimations = () => anims;
+        frame.paint('<span class="dim">beat two</span>');
+      },
+    });
+
+    expect(anims[0].playState).toBe('paused');
+
+    finish();
+    await done;
+  });
+
+  it('never touches an animation that was already paused for another reason', async () => {
+    const anims = [fakeAnimation('paused')];
+    const { done, finish } = await midBeat({ anims });
+
+    setHidden(true);
+    setHidden(false);
+
+    /* Ctrl+C freezes the frame on purpose; coming back to the tab must not
+       undo that. Only what this listener paused is what it resumes. */
+    expect(anims[0].playState).toBe('paused');
+
+    finish();
+    await done;
+  });
+
+  /* Unreachable through the PaceLab demo, which holds on `settle()` and so
+     cannot finish while paused — but the runner is what every future
+     long-running command is written against, and one holding on `sleep()` ends
+     on its own clock whether the visitor is watching or not. */
+  it('resumes what it is holding when it lets go, so nothing stays paused for good', async () => {
+    const anims = [fakeAnimation()];
+    const { done, finish } = await midBeat({ anims });
+
+    setHidden(true);
+    expect(anims[0].playState).toBe('paused');
+
+    finish();
+    await done;
+
+    expect(anims[0].playState).toBe('running');
+  });
+
+  it('still leaves a Ctrl+C frozen frame frozen, even mid-hold', async () => {
+    const anims = [fakeAnimation()];
+    const { done } = await midBeat({ anims });
+
+    setHidden(true);
+    term.press('c', { ctrlKey: true });
+    await done;
+
+    /* The ordering guard in `runDemo`: letting go resumes what it held, so the
+       watcher has to be released before the freeze rather than by the `finally`
+       afterwards — otherwise the frame starts moving again under the `^C`. */
+    expect(anims[0].playState).toBe('paused');
+  });
+});
+
 describe('after any exit path', () => {
   it.each([
     ['finishing', async (t, d) => { d.release(); }],
