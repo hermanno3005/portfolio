@@ -7,3 +7,9 @@ node_modules
 .git
 .DS_Store
 .claude
+.scratch
+
+# test tooling — never part of the site
+package.json
+package-lock.json
+test

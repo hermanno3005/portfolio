@@ -2,7 +2,7 @@
 
 Terminal-style portfolio — a fake zsh session in the browser, themed after
 [Ghostty](https://ghostty.org)'s dark default. Vanilla HTML/CSS/JS, no build
-step, no dependencies, deployed on Cloudflare.
+step, no runtime dependencies, deployed on Cloudflare.
 
 <!-- TODO: add a screenshot
 ![screenshot](assets/screenshot.png) -->
@@ -30,5 +30,18 @@ npx wrangler dev      # local preview
 npx wrangler deploy   # deploy to Cloudflare
 ```
 
-`.assetsignore` keeps repo plumbing (this file, `wrangler.jsonc`, …) out of
-the deployed assets.
+`.assetsignore` keeps repo plumbing (this file, `wrangler.jsonc`, the test
+setup, …) out of the deployed assets.
+
+## Tests
+
+```sh
+npm install   # once — vitest and jsdom, devDependencies only
+npm test      # run the suite
+npm run test:watch
+```
+
+The site itself still has no build step and no runtime dependencies: nothing
+under `node_modules/` or `test/` is ever served. Tests drive the real terminal
+through `Term.run('…')` in a jsdom copy of `index.html` and assert on what a
+visitor would see in `#output` — see `test/harness.js`.
