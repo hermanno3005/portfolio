@@ -12,9 +12,10 @@ afterEach(() => {
 });
 
 /* The line a project's name is printed on, so the assertions below can talk
-   about "what comes after PaceLab" rather than about output indices. */
+   about "what comes after PaceLab" rather than about output indices. A runnable
+   project's name carries a trailing `*` — see projects-runnability.test.js. */
 function indexOf(lines, needle) {
-  return lines.findIndex(l => l.trim() === needle);
+  return lines.findIndex(l => l.trim().replace(/\*$/, '') === needle);
 }
 
 describe('projects', () => {

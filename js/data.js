@@ -44,6 +44,13 @@ Currently working in OEM projects: prototype development, CAN bus analysis, and 
         'Claude-powered personal training coach with access to my full workout history via the COROS API.',
         'Data logger based on the HUAdapter Gen 2 for evaluating automated driving functions — built as my Diplomarbeit at TU Dresden.', */
       ],
+      /* Printed under the projects list — the only place the site advertises that
+         projects run. Markup, like `help` above: the `*` must be warm to be found.
+         Stated as a general rule; naming a project would over-promise. Flush left
+         and inside 59 characters, deliberately: that is where the list's horizontal
+         rule starts and ends, and the German line fills it exactly. */
+      projectsTip: `Tip:  cat projects/&lt;name&gt;.md · run <span class="heat">*</span> projects by name`,
+
       neofetchRole: 'Automotive Engineer · Software',
       welcome: "Hey, nice to meet you.\nI'm Hermann, have fun looking around.",
       helpHint: "Type 'help' to see available commands.",
@@ -107,6 +114,9 @@ Derzeit in OEM-Projekten tätig: Prototypenentwicklung, CAN-Bus-Analyse und Pyth
         'Claude-basierter Personal-Trainer mit Zugriff auf meine komplette Trainingshistorie über die COROS-API.',
         'Datenlogger auf Basis des HUAdapter Gen 2 zur Bewertung automatisierter Fahrfunktionen — entstanden als Diplomarbeit an der TU Dresden.', */
       ],
+
+      /* See the English note above. */
+      projectsTip: `Tipp: cat projects/&lt;name&gt;.md · <span class="heat">*</span> Projekte per Namen starten`,
 
       neofetchRole: 'Automotive Ingenieur · Software',
       welcome: "Hey, schön dich kennenzulernen.\nIch bin Hermann, viel Spaß beim Stöbern.",

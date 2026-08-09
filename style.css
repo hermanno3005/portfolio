@@ -16,6 +16,7 @@
   --green:      #5af78e;
   --cyan:       #57c7ff;
   --red:        #ff5c57;
+  --heat:       #ffb86c; /* not only heat: also the `*` marking a runnable project */
   --cursor:     #fffaf4;
   --selection:  #3d4551;
   --font:       'JetBrains Mono', 'Cascadia Code', 'Fira Code', monospace;
@@ -271,8 +272,14 @@ html, body {
 .cyan    { color: var(--cyan); }
 .red     { color: var(--red); }
 .dim     { color: var(--dim); }
+.heat    { color: var(--heat); }
 .bold    { font-weight: 700; }
 .link    { color: var(--cyan); cursor: pointer; text-decoration: underline; }
+
+/* Cyan underline goes somewhere, green underline runs something. Static, not a
+   hover state: the site has none, and on a tablet a hover affordance is invisible
+   on exactly the devices that can only tap. */
+.run-link { cursor: pointer; text-decoration: underline; }
 
 /* ── Neofetch Layout ── */
 .neofetch-grid {

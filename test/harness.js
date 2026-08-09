@@ -20,11 +20,10 @@
  *      racing a ~1.5s typewriter animation.
  *
  *      The cost is that everything else in that handler is skipped too: keyboard
- *      handling, the titlebar buttons, the mobile card, and the delegated click
- *      handler for `data-url` / `data-cmd` links in the output. Tests drive
- *      `Term.run()` directly, so none of it is needed yet. A test that needs a
- *      clicked link to run a command should teach this harness to wire that up,
- *      not reach around it.
+ *      handling, the titlebar buttons and the mobile card. The one piece tests do
+ *      need — the delegated click handler for `data-url` / `data-cmd` links in the
+ *      output — is a named function in commands.js, so the harness can wire just
+ *      that up and leave the animation alone.
  *
  * Scripts must be <script> elements rather than `window.eval()`: the modules are
  * declared with top-level `const`, which lands in the realm's global lexical
@@ -118,6 +117,9 @@ export async function mountTerminal({ projects } = {}) {
   /* Render the prompt the way the boot sequence would, without running it. */
   Term.setCwd(Term.cwd);
 
+  /* The one piece of the DOM-ready block tests need — see the note above. */
+  window.eval('wireOutputClicks()');
+
   return {
     document: window.document,
 
@@ -126,9 +128,23 @@ export async function mountTerminal({ projects } = {}) {
       Term.run(cmd);
     },
 
+    /** Click something in the output, exactly as a visitor would. */
+    click(el) {
+      if (!el) throw new Error('click: no element given');
+      el.dispatchEvent(new window.MouseEvent('click', { bubbles: true }));
+    },
+
     /** Press Tab on a half-typed line; returns the line as it is left behind. */
     complete(value) {
       return Term.tabComplete(value);
+    },
+
+    /**
+     * Every locale, for the strings a test cannot reach through the terminal —
+     * the ones the animated boot sequence types out.
+     */
+    locales() {
+      return window.eval('DATA.locales');
     },
 
     /** Everything the page has warned about since it booted. */

@@ -158,9 +158,26 @@ reg('open', ({ args, printRaw, escHtml }) => {
 /* ─── projects ─── */
 
 /* One project, as the projects list renders it — also what a project's own
-   command prints, so the two can never describe the same project differently. */
-function printProjectBlock(p, { printRaw, escHtml }) {
-  printRaw(`  <span class="green bold">${escHtml(p.name)}</span>`);
+   command prints, so the two can never describe the same project differently.
+   `advertise` is what separates the two: only the list dresses the name as
+   runnable, because only the list prints the tip that explains the dress. A
+   marker anywhere else is a glyph with nothing behind it. */
+function printProjectBlock(p, { printRaw, escHtml }, { advertise = false } = {}) {
+  const name = escHtml(p.name);
+
+  if (!advertise) {
+    printRaw(`  <span class="green bold">${name}</span>`);
+  } else {
+    /* Green already meant "you can type this" everywhere else on the site, and a
+       project name now is one; the underline says so without a hover state. The
+       `*` is `ls -F` style — attached, and warm rather than green, because a green
+       marker hanging off a green bold name is what an eye slides past. It carries
+       the command too: the tip sends the visitor hunting for the `*`, so on a
+       tablet the `*` is what they will tap. */
+    const cmd = `data-cmd="${escHtml(p.id)}"`;
+    const marker = p.runnable ? `<span class="heat run-link" ${cmd}>*</span>` : '';
+    printRaw(`  <span class="green bold run-link" ${cmd}>${name}</span>${marker}`);
+  }
   printRaw(`  <span class="dim">${escHtml(p.description)}</span>`);
   printRaw(`  Stack: <span class="cyan">${p.stack.map(escHtml).join(' · ')}</span>`);
   if (p.url) printRaw(`  URL:   <span class="link" data-url="${escHtml(p.url)}">${escHtml(p.url)}</span>`);
@@ -171,10 +188,10 @@ reg('projects', (ctx) => {
   printRaw(`<span class="cyan bold">Projects</span>`);
   printRaw(`<span class="dim">───────────────────────────────────────────────────────────</span>`);
   DATA.projects.forEach(p => {
-    printProjectBlock(p, ctx);
+    printProjectBlock(p, ctx, { advertise: true });
     printRaw('');
   });
-  printRaw(`<span class="dim">  Tip: cat projects/&lt;name&gt;.md for details</span>`);
+  printRaw(`<span class="dim">${DATA.locales[DATA.lang].projectsTip}</span>`);
 });
 
 /* ─── skills ─── */
@@ -473,6 +490,23 @@ function initMobileCard() {
   setHref('mc-email',    DATA.links.email ? `mailto:${DATA.links.email}` : null);
 }
 
+/* Clicks on the output: `data-url` opens a link, `data-cmd` runs a command.
+   Delegated, so output printed later is covered without re-wiring. Named and
+   called from the DOM-ready block below rather than written inline there, so a
+   test can wire clicks up without also booting the typewriter animation. */
+function wireOutputClicks() {
+  document.getElementById('output').addEventListener('click', (e) => {
+    const url = e.target.dataset.url;
+    if (url) {
+      /* Only allow http/https URLs — reject javascript: and other schemes */
+      if (/^https?:\/\//i.test(url)) window.open(url, '_blank', 'noopener');
+      return;
+    }
+    const cmd = e.target.dataset.cmd;
+    if (cmd) Term.run(cmd);
+  });
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   initMobileCard();
 
@@ -488,18 +522,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.body.appendChild(el);
   }
 
-  /* Delegated handler for data-url links in terminal output */
-  document.getElementById('output').addEventListener('click', (e) => {
-    const url = e.target.dataset.url;
-    if (url) {
-      /* Only allow http/https URLs — reject javascript: and other schemes */
-      if (/^https?:\/\//i.test(url)) window.open(url, '_blank', 'noopener');
-      return;
-    }
-    /* Clickable in-terminal commands (e.g. CV language choice) */
-    const cmd = e.target.dataset.cmd;
-    if (cmd) Term.run(cmd);
-  });
+  wireOutputClicks();
 
   Term.init();
 
