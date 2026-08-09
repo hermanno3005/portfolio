@@ -83,7 +83,10 @@ describe('reaching it', () => {
     term.press('c', { ctrlKey: true });
     await done;
 
-    expect(term.frame().querySelector('svg')).toBeNull();
+    /* Whatever beat was on screen stays on screen; what must not appear is
+       this frame, which is the one thing an interrupted run has not earned. */
+    expect(term.frame().textContent).not.toContain('SEASON');
+    expect(term.frame().textContent).not.toContain('5:14 NP');
     expect(term.lines().at(-1)).toBe('^C');
   });
 });

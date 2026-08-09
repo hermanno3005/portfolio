@@ -237,6 +237,19 @@ const Term = (() => {
     ]);
   }
 
+  /* Stop a frame where it stands. Aborting unwinds the demo's JavaScript, but a
+     beat's motion belongs to the browser and outlives it — and the one exit that
+     keeps its frame is `Ctrl+C`, so without this the visitor gets their prompt
+     back while the interrupted animation plays on above it, which reads as an
+     interrupt that did not work.
+
+     Paused rather than cancelled: cancelling reverts the frame to its
+     unanimated state and throws away the very thing being kept. */
+  function freeze(el) {
+    if (typeof el.getAnimations !== 'function') return;
+    for (const anim of el.getAnimations({ subtree: true })) anim.pause();
+  }
+
   /* Real character width, measured at run time. Not a viewport breakpoint: the
      font size drops from 14px to 12px under 600px, so a breakpoint would lie
      about how many columns the visitor actually has.
@@ -323,7 +336,7 @@ const Term = (() => {
          `^C` prints below it, and the prompt returns. Every other path — done,
          skipped, tapped, too narrow, reduced motion, even a demo that threw —
          gets the landing frame. */
-      if (state.interrupted) printRaw('^C');
+      if (state.interrupted) { freeze(frameEl); printRaw('^C'); }
       else demo.renderFinal(frame);
 
       if (failure) throw failure;

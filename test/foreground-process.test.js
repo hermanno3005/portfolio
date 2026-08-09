@@ -588,7 +588,11 @@ describe('the demo registry', () => {
   });
 
   it('ships a pacelab demo, so the runnable project is not a broken promise', async () => {
-    await term.run('pacelab');
+    /* Skipped rather than sat through: what is under test is that the real demo
+       is registered and runs clean, not how long its beats last. */
+    const done = term.run('pacelab');
+    term.press('Escape');
+    await done;
 
     expect(term.warnings()).toEqual([]);
     expect(term.frame()).not.toBeNull();
