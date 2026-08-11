@@ -239,7 +239,10 @@ reg('contact', ({ printRaw, escHtml }) => {
 /* ─── clear ─── */
 reg('clear', ({ clear }) => clear());
 
-/* ─── echo ─── */
+/* ─── echo (unlisted) ───
+   Kept for shell fidelity, left out of `help`: it states no fact about Hermann,
+   and `help` is a recruiter-facing menu rather than a command inventory. It
+   still runs and still Tab-completes. Same for `uname` below. */
 reg('echo', ({ args, printText }) => printText(args.join(' ')));
 
 /* ─── history ─── */
@@ -252,7 +255,7 @@ reg('history', ({ printRaw, escHtml }) => {
   });
 });
 
-/* ─── uname ─── */
+/* ─── uname (unlisted — see `echo` above) ─── */
 reg('uname', ({ args, printRaw }) => {
   const all = args.includes('-a');
   if (all) {
