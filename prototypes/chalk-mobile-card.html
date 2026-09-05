@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<!--
+  PROTOTYPE — throwaway. Wayfinder ticket #13, map #6.
+
+  Question: how do Chalk and PaceLab appear on the touch-device recruiter card?
+
+  Three variants of a projects section on `#mobile-card`, switchable via
+  `?variant=`, each rendered in a phone-width frame beside the card exactly as
+  it ships today. The real card only exists behind
+  `@media (max-width: 900px) and (pointer: coarse)`, which a desktop browser
+  will never satisfy — so the `.mc-*` rules are copied here unconditionally,
+  scoped to `.phone`. They are a verbatim copy of style.css; if that file moves,
+  this prototype is stale (and it is throwaway, so that is fine).
+
+  Each variant disagrees on three axes at once:
+    placement · affordance · which copy the line comes from.
+
+  Open: prototypes/chalk-mobile-card.html  (double-click, or serve the repo)
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>PROTOTYPE — Chalk on the recruiter card</title>
+<link rel="stylesheet" href="../style.css">
+<style>
+  html, body { height: auto; display: block; background: #000; }
+  body { margin: 0; color: var(--fg); font-family: var(--font); font-size: 14px; }
+  .proto-wrap { max-width: 1040px; margin: 0 auto; padding: 24px 16px 140px; }
+  .proto-h { color: var(--dim); font-size: 11px; letter-spacing: 2px; text-transform: uppercase; margin: 0 0 6px; }
+  .proto-h b { color: var(--heat); font-weight: 400; }
+  .proto-note { color: var(--dim); font-size: 12px; line-height: 1.7; margin: 14px 0 0; }
+  .proto-note code { color: var(--cyan); }
+  .proto-note b { color: var(--fg); font-weight: 400; }
+  .cols { display: flex; gap: 28px; align-items: flex-start; flex-wrap: wrap; }
+  .col { flex: 0 0 auto; }
+
+  /* A phone, so the card is judged at the width it is actually read at. */
+  .phone {
+    width: 390px; height: 780px; overflow-y: auto; overflow-x: hidden;
+    border: 1px solid #2a2a2a; border-radius: 28px;
+    box-shadow: 0 0 0 6px #141414, 0 18px 50px rgba(0,0,0,.7);
+  }
+  .phone::-webkit-scrollbar { width: 0; }
+
+  /* ── verbatim from style.css, minus the media query ───────────────────── */
+  .phone .card {
+    display: block; width: 100%; min-height: 100%;
+    background: var(--bg); color: var(--fg);
+    padding: 36px 22px 36px;
+  }
+  .phone .mc-inner  { max-width: 460px; margin: 0 auto; }
+  .phone .mc-prompt { color: var(--dim); font-size: 13px; margin-bottom: 20px; }
+  .phone .mc-name   { color: var(--green); font-size: 26px; font-weight: 700; line-height: 1.2; }
+  .phone .mc-role   { color: var(--cyan); font-size: 15px; margin-top: 4px; }
+  .phone .mc-bio    { color: var(--fg); font-size: 14px; line-height: 1.6; margin-top: 16px; opacity: .9; }
+  .phone .mc-label  { color: var(--dim); font-size: 12px; margin: 28px 0 10px; }
+  .phone .mc-btn {
+    display: flex; align-items: center; gap: 8px;
+    padding: 14px 16px; margin-bottom: 10px;
+    background: #161616; border: 1px solid #262626; border-radius: 8px;
+    color: var(--fg); font: inherit; font-size: 15px;
+    text-decoration: none; -webkit-tap-highlight-color: transparent;
+  }
+  .phone .mc-btn:active { background: #1f1f1f; }
+  .phone .mc-primary    { border-color: var(--green); color: var(--green); }
+  .phone .mc-footer     { color: var(--dim); font-size: 12px; margin-top: 30px; text-align: center; }
+
+  /* ── candidate-only styles (this is the part under evaluation) ─────────── */
+
+  /* A — projects as buttons, in the card's own idiom */
+  .phone .p-btn { align-items: flex-start; flex-direction: column; gap: 4px; padding: 13px 16px; }
+  .phone .p-btn .n { color: var(--green); font-size: 15px; }
+  .phone .p-btn .d { color: var(--dim); font-size: 12.5px; line-height: 1.5; }
+
+  /* B — projects as content, in the terminal's own idiom */
+  .phone .p-block { padding: 14px 0; border-bottom: 1px solid #1c1c1c; }
+  .phone .p-block:first-of-type { border-top: 1px solid #1c1c1c; }
+  .phone .p-block .n { color: var(--green); font-size: 15px; font-weight: 700; }
+  .phone .p-block .n .star { color: var(--heat); font-weight: 400; }
+  .phone .p-block .d { color: var(--fg); opacity: .85; font-size: 13px; line-height: 1.6; margin-top: 5px; }
+  .phone .p-block .s { color: var(--cyan); font-size: 12px; margin-top: 6px; }
+  .phone .p-block .g { display: inline-block; color: var(--dim); font-size: 12.5px; margin-top: 9px; text-decoration: none; }
+  .phone .p-foot { color: var(--dim); font-size: 11.5px; margin-top: 12px; line-height: 1.6; }
+  .phone .p-foot .star { color: var(--heat); }
+
+  /* C — projects as dense rows */
+  .phone .p-row {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 14px; margin-bottom: 8px;
+    background: #131313; border: 1px solid #222; border-radius: 8px;
+    color: var(--fg); text-decoration: none; -webkit-tap-highlight-color: transparent;
+  }
+  .phone .p-row .body { flex: 1 1 auto; min-width: 0; }
+  .phone .p-row .top { display: flex; align-items: baseline; gap: 8px; }
+  .phone .p-row .n { color: var(--green); font-size: 15px; }
+  .phone .p-row .s { color: var(--cyan); font-size: 11px; opacity: .85; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .phone .p-row .d { color: var(--dim); font-size: 12.5px; margin-top: 3px; display: block; }
+  .phone .p-row .chev { color: var(--dim); flex: 0 0 auto; }
+
+  /* deliberately not part of the design under evaluation */
+  .switcher {
+    position: fixed; left: 50%; bottom: 18px; transform: translateX(-50%);
+    display: flex; align-items: center; gap: 4px;
+    background: #f5f5f5; color: #111; border-radius: 999px;
+    box-shadow: 0 6px 24px rgba(0,0,0,.6); padding: 6px 8px; font-size: 13px; z-index: 10;
+  }
+  .switcher button { font: inherit; border: 0; background: transparent; cursor: pointer; padding: 4px 10px; border-radius: 999px; color: #111; }
+  .switcher button:hover { background: #ddd; }
+  .switcher .name { padding: 0 10px; white-space: nowrap; }
+</style>
+</head>
+<body>
+<div class="proto-wrap">
+  <div class="cols">
+    <div class="col">
+      <p class="proto-h">Now — <b>the card as it ships</b></p>
+      <div class="phone"><main class="card" id="now"></main></div>
+    </div>
+    <div class="col">
+      <p class="proto-h">Candidate <b id="vk">A</b> — <span id="vname"></span></p>
+      <div class="phone"><main class="card" id="cand"></main></div>
+    </div>
+  </div>
+  <p class="proto-note" id="vnote"></p>
+  <p class="proto-note">
+    Chalk's copy is <b>fixed</b> by
+    <a class="link" href="https://github.com/hermanno3005/portfolio/issues/11" target="_blank">#11</a>;
+    the demo caption (#14) is a different string and does not appear here.
+    The card is built from <code>DATA</code> in <b>English only</b> today —
+    <code>initMobileCard</code> reads <code>DATA.locales.en</code> and says so
+    in a comment - so "in both locales" is itself a question this ticket has to
+    answer, not a given.
+  </p>
+</div>
+
+<div class="switcher">
+  <button id="prev">←</button><span class="name" id="label"></span><button id="next">→</button>
+</div>
+
+<script>
+/* A stand-in for DATA — PaceLab and portfolio verbatim from js/data.js, Chalk
+   from the decision on #11. `short` is the pre-locale `description` field that
+   data.js overwrites at runtime; variant C is the one that wants it back. */
+const PROJECTS = [
+  { id:'pacelab', name:'PaceLab', runnable:true, stack:['Python','SQLite','Docker'],
+    url:'https://github.com/hermanno3005/pacelab',
+    short:'normalized pace from grade, heat and wind',
+    en:'Python pipeline that strips weather and terrain out of my running data to show the fitness trend underneath - built on the intervals.icu and Open-Meteo APIs.' },
+  { id:'chalk', name:'Chalk', runnable:true, stack:['iOS'],
+    url:'https://github.com/hermanno3005/Chalk',
+    short:'what to load at the rack, out of every entry',
+    en:'iOS strength tracker that reads a rep-max out of every entry and keeps the strength curve up to date, so I know what to load at the rack - everything stays on the phone.' },
+  { id:'portfolio', name:'portfolio', runnable:false, stack:['HTML','CSS','JavaScript'],
+    url:'https://github.com/hermanno3005/portfolio',
+    short:'terminal-like portfolio website',
+    en:'This terminal-style portfolio website - Ghostty-themed, vanilla JS, hosted on Cloudflare.' },
+];
+const APPS = PROJECTS.filter(p => p.runnable);
+
+const HEAD = `
+  <div class="mc-prompt">hermann@portfolio:~$ whoami</div>
+  <h1 class="mc-name">Hermann Aust</h1>
+  <p class="mc-role">Automotive Engineer · Software</p>
+  <p class="mc-bio">Automotive engineer with a software focus. I build tools that turn messy data into decisions - from CAN bus traces to my own training. Currently working in OEM projects: prototype development, CAN bus analysis, and Python-based tooling.</p>`;
+const CV = `
+  <div class="mc-label">// download cv</div>
+  <a class="mc-btn mc-primary" href="#">📄 CV — English</a>
+  <a class="mc-btn mc-primary" href="#">📄 Lebenslauf — Deutsch</a>`;
+const LINKS = `
+  <div class="mc-label">// links</div>
+  <a class="mc-btn" href="#">→ LinkedIn</a>
+  <a class="mc-btn" href="#">→ GitHub</a>
+  <a class="mc-btn" href="#">→ Email</a>`;
+const FOOT = `<p class="mc-footer">Open on desktop for the full terminal experience ↗</p>`;
+
+const wrap = html => `<div class="mc-inner">${html}</div>`;
+
+document.getElementById('now').innerHTML = wrap(HEAD + CV + LINKS + FOOT);
+
+/* ══ A — buttons, section last ═════════════════════════════════════════════
+   The card is a stack of tap targets; a project becomes one more. Same chrome
+   as the CV and links buttons, two lines instead of one. Last, so the two
+   things a recruiter came for (CV, contact) still come first. All three
+   projects, straight from DATA. */
+function variantA() {
+  const items = PROJECTS.map(p => `
+    <a class="mc-btn p-btn" href="${p.url}" target="_blank">
+      <span class="n">→ ${p.name}</span>
+      <span class="d">${p.en}</span>
+    </a>`).join('');
+  return wrap(HEAD + CV + LINKS + `<div class="mc-label">// projects</div>${items}` + FOOT);
+}
+
+/* ══ B — content, section high ═════════════════════════════════════════════
+   Projects are the evidence, so they sit directly under the bio, before the
+   CV. Not buttons: the terminal's own `projects` block, transplanted — green
+   bold name, description, cyan stack, a quiet GitHub link, and the warm `*`
+   for the two that run on desktop, footnoted the way `projectsTip` does it. */
+function variantB() {
+  const items = PROJECTS.map(p => `
+    <div class="p-block">
+      <div class="n">${p.name}${p.runnable ? ' <span class="star">*</span>' : ''}</div>
+      <div class="d">${p.en}</div>
+      <div class="s">${p.stack.join(' · ')}</div>
+      <a class="g" href="${p.url}" target="_blank">→ ${p.url.replace('https://','')}</a>
+    </div>`).join('');
+  const foot = `<p class="p-foot"><span class="star">*</span> runs in the terminal - open this page on a desktop.</p>`;
+  return wrap(HEAD + `<div class="mc-label">// projects</div>${items}${foot}` + CV + LINKS + FOOT);
+}
+
+/* ══ C — rows, section in the middle, short copy ═══════════════════════════
+   Between the CV and the links: read the CV, glance at the work, then reach
+   out. One dense row per project — name, stack, one short line written for the
+   card rather than the terminal's full sentence — and only the two that are
+   actually built as apps; the portfolio is the page you are standing on. */
+function variantC() {
+  const items = APPS.map(p => `
+    <a class="p-row" href="${p.url}" target="_blank">
+      <span class="body">
+        <span class="top"><span class="n">${p.name}</span><span class="s">${p.stack.join(' · ')}</span></span>
+        <span class="d">${p.short}</span>
+      </span>
+      <span class="chev">›</span>
+    </a>`).join('');
+  return wrap(HEAD + CV + `<div class="mc-label">// projects</div>${items}` + LINKS + FOOT);
+}
+
+/* ══ switcher ═════════════════════════════════════════════════════════════ */
+const VARIANTS = {
+  A: { name: 'Buttons, last', render: variantA,
+       note: `<b>A</b> — the section is three more <code>.mc-btn</code>s, after the links. Nothing new to style, the card stays one column of tap targets, and each button is its own GitHub link. Costs: the full <code>projectDescriptions</code> sentence has to live inside a button (three and four lines deep here), the stack is dropped, and there is nowhere to say a project runs. Carries all three projects, so <code>portfolio</code> lands on the card too.` },
+  B: { name: 'Terminal block, high', render: variantB,
+       note: `<b>B</b> — projects move above the CV and stop being buttons: the desktop <code>projects</code> output, transplanted. Everything <code>DATA</code> holds survives (description, stack, url), and the warm <code>*</code> with its footnote is the only place the card admits the demos exist. Costs: a recruiter scrolls past three project blocks before reaching the CV button, and this is the variant that adds the most new CSS.` },
+  C: { name: 'Dense rows, middle, short copy', render: variantC,
+       note: `<b>C</b> — CV, then the work, then contact. One row per project, and the line is the <i>short</i> one (<code>normalized pace from grade, heat and wind</code>): the terminal's paragraph is written for a 59-column block, not a 390px phone. Costs: that short line is <code>p.description</code> before <code>applyLocale</code> overwrites it, so a card that wants it needs a second field in <code>DATA</code> and a second translation - and Chalk's short line does not exist yet (the one here is invented). Shows only the two apps: is dropping <code>portfolio</code> right?` },
+};
+const KEYS = Object.keys(VARIANTS);
+function show(k) {
+  const v = VARIANTS[k];
+  document.getElementById('cand').innerHTML = v.render();
+  document.getElementById('vk').textContent = k;
+  document.getElementById('vname').textContent = v.name;
+  document.getElementById('label').textContent = `${k} — ${v.name}`;
+  document.getElementById('vnote').innerHTML = v.note;
+  try { const u = new URL(location); u.searchParams.set('variant', k); history.replaceState(null, '', u); } catch {}
+  cur = k;
+}
+let cur = KEYS.includes(new URL(location).searchParams.get('variant')) ? new URL(location).searchParams.get('variant') : 'A';
+const step = d => show(KEYS[(KEYS.indexOf(cur) + d + KEYS.length) % KEYS.length]);
+document.getElementById('prev').onclick = () => step(-1);
+document.getElementById('next').onclick = () => step(1);
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowLeft')  step(-1);
+  if (e.key === 'ArrowRight') step(1);
+});
+show(cur);
+</script>
+</body>
+</html>
