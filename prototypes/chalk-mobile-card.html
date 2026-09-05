@@ -3,6 +3,7 @@
   PROTOTYPE — throwaway. Wayfinder ticket #13, map #6.
 
   Question: how do Chalk and PaceLab appear on the touch-device recruiter card?
+  Answer:   variant C (below) — dense rows between the CV and the links.
 
   Three variants of a projects section on `#mobile-card`, switchable via
   `?variant=`, each rendered in a phone-width frame beside the card exactly as
@@ -148,14 +149,14 @@ const PROJECTS = [
     en:'Python pipeline that strips weather and terrain out of my running data to show the fitness trend underneath - built on the intervals.icu and Open-Meteo APIs.' },
   { id:'chalk', name:'Chalk', runnable:true, stack:['iOS'],
     url:'https://github.com/hermanno3005/Chalk',
-    short:'what to load at the rack, out of every entry',
+    short:'a rep-max out of every entry',
     en:'iOS strength tracker that reads a rep-max out of every entry and keeps the strength curve up to date, so I know what to load at the rack - everything stays on the phone.' },
   { id:'portfolio', name:'portfolio', runnable:false, stack:['HTML','CSS','JavaScript'],
     url:'https://github.com/hermanno3005/portfolio',
-    short:'terminal-like portfolio website',
+    short:null,   /* no card line, so the portfolio stays off the card */
     en:'This terminal-style portfolio website - Ghostty-themed, vanilla JS, hosted on Cloudflare.' },
 ];
-const APPS = PROJECTS.filter(p => p.runnable);
+const CARD = PROJECTS.filter(p => p.short);   /* the winner's rule: a card line is what puts a project on the card */
 
 const HEAD = `
   <div class="mc-prompt">hermann@portfolio:~$ whoami</div>
@@ -214,7 +215,7 @@ function variantB() {
    card rather than the terminal's full sentence — and only the two that are
    actually built as apps; the portfolio is the page you are standing on. */
 function variantC() {
-  const items = APPS.map(p => `
+  const items = CARD.map(p => `
     <a class="p-row" href="${p.url}" target="_blank">
       <span class="body">
         <span class="top"><span class="n">${p.name}</span><span class="s">${p.stack.join(' · ')}</span></span>
@@ -232,7 +233,7 @@ const VARIANTS = {
   B: { name: 'Terminal block, high', render: variantB,
        note: `<b>B</b> — projects move above the CV and stop being buttons: the desktop <code>projects</code> output, transplanted. Everything <code>DATA</code> holds survives (description, stack, url), and the warm <code>*</code> with its footnote is the only place the card admits the demos exist. Costs: a recruiter scrolls past three project blocks before reaching the CV button, and this is the variant that adds the most new CSS.` },
   C: { name: 'Dense rows, middle, short copy', render: variantC,
-       note: `<b>C</b> — CV, then the work, then contact. One row per project, and the line is the <i>short</i> one (<code>normalized pace from grade, heat and wind</code>): the terminal's paragraph is written for a 59-column block, not a 390px phone. Costs: that short line is <code>p.description</code> before <code>applyLocale</code> overwrites it, so a card that wants it needs a second field in <code>DATA</code> and a second translation - and Chalk's short line does not exist yet (the one here is invented). Shows only the two apps: is dropping <code>portfolio</code> right?` },
+       note: `<b>C</b> &mdash; <b>the winner.</b> CV, then the work, then contact - the links sit behind the projects, so a recruiter reaching for LinkedIn scrolls past what was built. Two rows only (a project is on the card iff it has a card line), the short line is a new English-only field in <code>DATA</code>, and the card keeps reading <code>locales.en</code>.` },
 };
 const KEYS = Object.keys(VARIANTS);
 function show(k) {
