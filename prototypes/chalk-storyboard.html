@@ -275,17 +275,10 @@ function staircase({ draw = null, rise = null, dotsAt = null, riseDur = 0.5 } = 
   <g fill="var(--green)" stroke="none">${vals.map((w, i) => dot(i + 1, w)).join('')}</g>`;
 }
 
-/* The rise, made the event of the beat: a dashed trace and two hollow marks
-   stay where cells 4–5 stood (drawn *under* the plateau, so they are revealed
-   by the lift rather than announced), and `+5 kg` floats up with the plateau.
-   Both leave again before the landing frame, which carries neither. */
-function riseTrace(at, gone) {
-  const xa = X(3), xb = X(5);
-  return `<g style="animation: ckFade .3s ease ${at}s both, ckOut .5s ease ${gone}s forwards">
-    <line x1="${f(xa)}" y1="${f(Y(120))}" x2="${f(xb)}" y2="${f(Y(120))}" stroke="${MUTED}" stroke-width="1.5" stroke-dasharray="3 3"/>
-    ${[4, 5].map(n => `<circle cx="${f(X(n))}" cy="${f(Y(120))}" r="3" fill="var(--bg)" stroke="${MUTED}" stroke-width="1.2"/>`).join('')}
-  </g>`;
-}
+/* The rise, made the event of the beat: `+5 kg` floats up with the plateau
+   and leaves again before the landing frame, which does not carry it. (A
+   dashed trace of where the cells stood was tried and cut: a leftover that
+   then vanishes reads as cheap.) */
 function riseLabel(at, dur, gone) {
   return `<text class="ck-vb" x="${f((X(4) + X(5)) / 2)}" y="${f(Y(120) - 16)}" font-size="13" font-weight="700" fill="var(--heat)" text-anchor="middle"
     style="animation: ckFade .3s ease ${at}s both, ckRise ${dur}s cubic-bezier(.4,0,.2,1) ${at}s both, ckOut .5s ease ${gone}s forwards">+5 kg</text>`;
@@ -357,7 +350,7 @@ const A_BEATS = [
   },
   {
     name: 'Save — into the record',
-    what: '<b>Save</b>: the chip becomes <b>best for 5 reps · 4 entries ›</b> and 125 turns amber — the sheet has become the readout. The axes, the ghost and the <b>old</b> staircase assemble on the right. A breath. Then cells 4–5 <b>step up 5 kg</b> over a full second: the dots swell and go amber, <b>+5 kg</b> rides up with the plateau, and a dashed trace stays where they were. Trace and label fade; the history line and the caption arrive last.',
+    what: '<b>Save</b>: the chip becomes <b>best for 5 reps · 4 entries ›</b> and 125 turns amber — the sheet has become the readout. The axes, the ghost and the <b>old</b> staircase assemble on the right. A breath. Then cells 4–5 <b>step up 5 kg</b> over a full second: the dots swell and go amber, <b>+5 kg</b> rides up with the plateau and fades; the history line and the caption arrive last.',
     html: () => svg(`
       ${header()}
       ${readout('5 reps', A('ckUp .3s ease .2s forwards'))}
@@ -368,7 +361,6 @@ const A_BEATS = [
       ${wasLine(A('ckFade .4s ease 3.7s both'))}
       ${chrome(A('ckFade .5s ease .3s both'))}
       ${ghost(A('ckFade .7s ease .5s both'))}
-      ${riseTrace(2.3, 4.1)}
       ${staircase({ draw: 0.8, dotsAt: 0.85, rise: 2.3, riseDur: 1.0 })}
       ${riseLabel(2.3, 1.0, 4.1)}
     `) + caption(CAP_IN(4.0)),
