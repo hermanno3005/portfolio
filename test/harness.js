@@ -1,17 +1,19 @@
 /*
  * Test harness — drives the real terminal through `Term.run()`.
  *
- * The site is three IIFE globals loaded by plain <script> tags in a fixed order,
- * with `DATA.setLang('en')` firing while data.js is being parsed — before
- * terminal.js and commands.js exist. The harness reproduces that faithfully by
- * evaluating the three files as real <script> elements, in order, in a single
- * fresh jsdom realm.
+ * The site is a handful of globals loaded by plain <script> tags in a fixed
+ * order, with `DATA.setLang('en')` firing while data.js is being parsed —
+ * before terminal.js and commands.js exist. The harness reproduces that
+ * faithfully by evaluating those files as real <script> elements, in order, in
+ * a single fresh jsdom realm.
  *
  * Two things are worth knowing about how it does that:
  *
  *   1. The DOM comes from the real index.html, so the fixture can never drift
- *      from production. jsdom does not fetch external resources, so the three
- *      <script src> tags in it are inert; the harness injects the sources itself.
+ *      from production. jsdom does not fetch external resources, so the
+ *      <script src> tags in it are inert; the harness injects the sources
+ *      itself — and reads the load order off those same tags, so a script
+ *      added to the page is under test the moment it is added.
  *
  *   2. The scripts are injected *after* the document has finished loading. The
  *      DOMContentLoaded handler in commands.js — which calls `Term.init()` and
@@ -38,10 +40,32 @@ import { JSDOM, VirtualConsole } from 'jsdom';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
-/* Load order matters — see the note above. */
-const SCRIPTS = ['js/data.js', 'js/terminal.js', 'js/commands.js', 'js/demos.js'];
-
 const indexHtml = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
+
+/* Load order matters — see the note above — so it is scraped from index.html in
+   document order rather than kept as a second, hand-written copy of it that can
+   drift. Relative `src` only: anything hosted elsewhere is not ours to boot.
+   Exported because the tests that ask about the load order should ask about the
+   list the harness actually boots, not scrape a second copy of their own. */
+export const SCRIPTS = [...indexHtml.matchAll(/<script\s+src="([^"]+)"/g)]
+  .map(m => m[1])
+  .filter(src => !/^[a-z]+:|^\/\//i.test(src));
+
+/* The scrape recognises one tag form — `<script src="…">`. A tag written any
+   other way (single quotes, an attribute before `src`, the `src` on its own
+   line) would be skipped in silence, and a missing script surfaces much later
+   as a baffling `ReferenceError` inside jsdom — precisely the failure the note
+   above promises the harness prevents. So every `<script` on the page has to be
+   accounted for; if one is not, say which file to fix rather than letting the
+   suite fail somewhere else. */
+const scriptTags = (indexHtml.match(/<script[\s>]/g) || []).length;
+if (scriptTags !== SCRIPTS.length) {
+  throw new Error(
+    `harness: index.html has ${scriptTags} <script> tags but ${SCRIPTS.length} were scraped. ` +
+    'Either a tag is written in a form the scraper does not recognise, or an inline ' +
+    'script was added — teach the scraper in test/harness.js about it.'
+  );
+}
 
 const sourceCache = new Map();
 function sourceOf(rel) {
@@ -168,7 +192,7 @@ export async function mountTerminal({ projects, reducedMotion = false, scripts =
       return cmdInput.value;
     },
 
-    /** Register a demo, exactly as `js/demos.js` does. */
+    /** Register a demo, exactly as a file in `js/demos/` does. */
     regDemo(id, demo) {
       window.eval('regDemo')(id, demo);
     },

@@ -342,7 +342,7 @@ describe('the hand-off, which may not be a cut', () => {
 });
 
 describe('the whole choreography', () => {
-  const source = () => fs.readFileSync(path.join(ROOT, 'js', 'demos.js'), 'utf8');
+  const source = () => fs.readFileSync(path.join(ROOT, 'js', 'demos', 'pacelab.js'), 'utf8');
 
   it('runs for about eight seconds, in two beats and one breath', async () => {
     const one = term.window.eval('PACELAB_BEAT_ONE');

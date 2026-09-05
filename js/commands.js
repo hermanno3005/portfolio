@@ -449,7 +449,8 @@ DATA.projects.forEach(p => {
   reg(p.id, (ctx) => {
     if (p.runnable) {
       /* Runnability is data, the demo is code, and they meet here — at run
-         time, so `js/demos.js` can load in any order relative to this file. */
+         time, so the `js/demos/` group can load in any order relative to this
+         file. */
       const demo = DEMOS[p.id];
       if (demo) return Term.runDemo(demo, p.id);
       /* Claims to run something and can't — say so, and still show the visitor
