@@ -313,7 +313,7 @@ const A_BEATS = [
     what: 'Exercise name. Giant <b>5 reps</b> (the seeded rep count). <b>Next</b>: the 5 shrinks into the stage-two header chip, <b>120 kg</b> takes its place, and the verdict line wakes up under it — <b>Matches your 5-rep best</b>.',
     html: () => svg(`
       ${header(A('ckFade .5s ease .1s both'))}
-      ${big('5', 'reps', 'var(--fg)', ' style="transform-origin:' + L + 'px ' + NUM_Y + 'px; animation: ckIn .45s ease .3s both, ckFlyReps .55s cubic-bezier(.6,0,.25,1) 1.3s both, ckOut .2s ease 1.7s both"')}
+      ${big('5', 'reps', 'var(--fg)', ' style="transform-origin:' + L + 'px ' + NUM_Y + 'px; animation: ckIn .45s ease .3s both, ckFlyReps .55s cubic-bezier(.6,0,.25,1) 1.3s forwards, ckOut .2s ease 1.7s forwards"')}
       ${readout('5 reps', A('ckFade .25s ease 1.75s both'))}
       ${big('120', 'kg', 'var(--fg)', A('ckIn .45s ease 1.55s both'))}
       ${verdict(V_MATCH, A('ckFade .4s ease 2.05s both'))}
@@ -325,12 +325,12 @@ const A_BEATS = [
     html: () => svg(`
       ${header()}
       ${readout('5 reps')}
-      ${big('120',   'kg', 'var(--fg)', A('ckUp .25s ease .6s both'))}
-      ${big('122.5', 'kg', 'var(--fg)', A('ckIn .3s ease .6s both, ckUp .25s ease 1.5s both'))}
+      ${big('120',   'kg', 'var(--fg)', A('ckUp .25s ease .6s forwards'))}
+      ${big('122.5', 'kg', 'var(--fg)', A('ckIn .3s ease .6s both, ckUp .25s ease 1.5s forwards'))}
       ${big('125',   'kg', 'var(--fg)', A('ckIn .3s ease 1.5s both'))}
       ${tap('120', 0.5)}${tap('122.5', 1.4)}
-      ${verdict(V_MATCH, A('ckUp .25s ease .65s both'))}
-      ${verdict(V_25,    A('ckIn .3s ease .65s both, ckUp .25s ease 1.55s both'))}
+      ${verdict(V_MATCH, A('ckUp .25s ease .65s forwards'))}
+      ${verdict(V_25,    A('ckIn .3s ease .65s both, ckUp .25s ease 1.55s forwards'))}
       ${verdict(V_5,     A('ckIn .3s ease 1.55s both'))}
       <g style="animation: ckFade 1ms linear 2.5s both"></g>
     `) + caption('opacity:0'),
@@ -340,7 +340,7 @@ const A_BEATS = [
     what: '<b>Save</b>: the chip becomes <b>best for 5 reps · 4 entries ›</b> and 125 turns amber — the sheet has become the readout. The axes, the ghost and the <b>old</b> staircase assemble on the right; then cells 4–5 step up 5 kg and light amber. The history line and the caption arrive last.',
     html: () => svg(`
       ${header()}
-      ${readout('5 reps', A('ckUp .3s ease .2s both'))}
+      ${readout('5 reps', A('ckUp .3s ease .2s forwards'))}
       ${readout(READOUT_AFTER, A('ckIn .35s ease .3s both'))}
       ${big('125', 'kg', 'var(--fg)', '', 'ck-num')}
       <style>#ck-num text:first-child { animation: ckHeat .6s linear .3s both }</style>
@@ -365,9 +365,9 @@ const B_BEATS = [
     what: 'Everything the app shows before the entry: <b>best for 5 reps · 3 entries ›</b>, <b>120 kg</b> in plain white, the old staircase with the ghost behind it, cell 5 enlarged as the default selection. Then the sheet opens: readout out, curve dims, giant <b>5 reps</b> in.',
     html: () => svg(`
       ${header(A('ckFade .5s ease .1s both'))}
-      ${readout(READOUT_BEFORE, A('ckFade .5s ease .2s both, ckUp .3s ease 1.5s both'))}
-      ${big('120', 'kg', 'var(--fg)', A('ckFade .5s ease .2s both, ckUp .3s ease 1.5s both'))}
-      <g style="animation: ckFade .6s ease .3s both, ckDim .5s ease 1.5s both">
+      ${readout(READOUT_BEFORE, A('ckFade .5s ease .2s both, ckUp .3s ease 1.5s forwards'))}
+      ${big('120', 'kg', 'var(--fg)', A('ckFade .5s ease .2s both, ckUp .3s ease 1.5s forwards'))}
+      <g style="animation: ckFade .6s ease .3s both, ckDim .5s ease 1.5s forwards">
         ${chrome()}${ghost()}
         <path d="${stair(BEST_BEFORE)}" fill="none" stroke="var(--green)" stroke-width="2.5" filter="url(#ck-glow)"/>
         ${BEST_BEFORE.map((w, i) => `<circle cx="${f(X(i + 1))}" cy="${f(Y(w))}" r="${i + 1 === SEL ? 4.5 : 3}" fill="var(--green)"/>`).join('')}
@@ -386,14 +386,14 @@ const B_BEATS = [
         <path d="${stair(BEST_BEFORE)}" fill="none" stroke="var(--green)" stroke-width="2.5" filter="url(#ck-glow)"/>
         ${BEST_BEFORE.map((w, i) => `<circle cx="${f(X(i + 1))}" cy="${f(Y(w))}" r="${i + 1 === SEL ? 4.5 : 3}" fill="var(--green)"/>`).join('')}
       </g>
-      ${big('5', 'reps', 'var(--fg)', ' style="transform-origin:' + L + 'px ' + NUM_Y + 'px; animation: ckFlyReps .55s cubic-bezier(.6,0,.25,1) .5s both, ckOut .2s ease .9s both"')}
+      ${big('5', 'reps', 'var(--fg)', ' style="transform-origin:' + L + 'px ' + NUM_Y + 'px; animation: ckFlyReps .55s cubic-bezier(.6,0,.25,1) .5s forwards, ckOut .2s ease .9s forwards"')}
       ${readout('5 reps', A('ckFade .25s ease .95s both'))}
-      ${big('120',   'kg', 'var(--fg)', A('ckIn .45s ease .75s both, ckUp .25s ease 1.9s both'))}
-      ${big('122.5', 'kg', 'var(--fg)', A('ckIn .3s ease 1.9s both, ckUp .25s ease 2.7s both'))}
+      ${big('120',   'kg', 'var(--fg)', A('ckIn .45s ease .75s both, ckUp .25s ease 1.9s forwards'))}
+      ${big('122.5', 'kg', 'var(--fg)', A('ckIn .3s ease 1.9s both, ckUp .25s ease 2.7s forwards'))}
       ${big('125',   'kg', 'var(--fg)', A('ckIn .3s ease 2.7s both'))}
       ${tap('120', 1.8)}${tap('122.5', 2.6)}
-      ${verdict(V_MATCH, A('ckFade .4s ease 1.25s both, ckUp .25s ease 1.95s both'))}
-      ${verdict(V_25,    A('ckIn .3s ease 1.95s both, ckUp .25s ease 2.75s both'))}
+      ${verdict(V_MATCH, A('ckFade .4s ease 1.25s both, ckUp .25s ease 1.95s forwards'))}
+      ${verdict(V_25,    A('ckIn .3s ease 1.95s both, ckUp .25s ease 2.75s forwards'))}
       ${verdict(V_5,     A('ckIn .3s ease 2.75s both'))}
       <g style="animation: ckFade 1ms linear 3.5s both"></g>
     `) + caption('opacity:0'),
@@ -403,7 +403,7 @@ const B_BEATS = [
     what: '<b>Save</b>: chip → <b>4 entries</b>, 125 turns amber, the curve comes back to full strength and cells 4–5 <b>step up</b> against the frame the visitor already knows. History line, caption.',
     html: () => svg(`
       ${header()}
-      ${readout('5 reps', A('ckUp .3s ease .2s both'))}
+      ${readout('5 reps', A('ckUp .3s ease .2s forwards'))}
       ${readout(READOUT_AFTER, A('ckIn .35s ease .3s both'))}
       ${big('125', 'kg', 'var(--fg)', '', 'ck-num')}
       <style>#ck-num text:first-child { animation: ckHeat .6s linear .3s both }</style>
@@ -437,12 +437,12 @@ const C_BEATS = [
     html: () => svg(`
       ${header(A('ckFade .5s ease .1s both'))}
       <g class="ck-vb"${A('ckIn .45s ease .3s both')}>${t(L, NUM_Y, NUM, 'var(--fg)', '5 ×', ' font-weight="300" letter-spacing="-2"')}</g>
-      <g class="ck-vb"${A('ckIn .45s ease 1.1s both, ckUp .25s ease 2.0s both')}>${t(ENTRY_X, NUM_Y, NUM, 'var(--fg)', '120', ' font-weight="300" letter-spacing="-2"')}${t(ENTRY_X + 3 * ADV + 27.2, NUM_Y, UNIT, TICK, 'kg')}</g>
-      <g class="ck-vb"${A('ckIn .3s ease 2.0s both, ckUp .25s ease 2.8s both')}>${t(ENTRY_X, NUM_Y, NUM, 'var(--fg)', '122.5', ' font-weight="300" letter-spacing="-2"')}${t(ENTRY_X + 5 * ADV + 27.2, NUM_Y, UNIT, TICK, 'kg')}</g>
+      <g class="ck-vb"${A('ckIn .45s ease 1.1s both, ckUp .25s ease 2.0s forwards')}>${t(ENTRY_X, NUM_Y, NUM, 'var(--fg)', '120', ' font-weight="300" letter-spacing="-2"')}${t(ENTRY_X + 3 * ADV + 27.2, NUM_Y, UNIT, TICK, 'kg')}</g>
+      <g class="ck-vb"${A('ckIn .3s ease 2.0s both, ckUp .25s ease 2.8s forwards')}>${t(ENTRY_X, NUM_Y, NUM, 'var(--fg)', '122.5', ' font-weight="300" letter-spacing="-2"')}${t(ENTRY_X + 5 * ADV + 27.2, NUM_Y, UNIT, TICK, 'kg')}</g>
       <g class="ck-vb"${A('ckIn .3s ease 2.8s both')}>${t(ENTRY_X, NUM_Y, NUM, 'var(--fg)', '125', ' font-weight="300" letter-spacing="-2"')}${t(ENTRY_X + 3 * ADV + 27.2, NUM_Y, UNIT, TICK, 'kg')}</g>
       ${cTap('120', 1.9)}${cTap('122.5', 2.7)}
-      ${verdict(V_MATCH, A('ckFade .4s ease 1.55s both, ckUp .25s ease 2.05s both'))}
-      ${verdict(V_25,    A('ckIn .3s ease 2.05s both, ckUp .25s ease 2.85s both'))}
+      ${verdict(V_MATCH, A('ckFade .4s ease 1.55s both, ckUp .25s ease 2.05s forwards'))}
+      ${verdict(V_25,    A('ckIn .3s ease 2.05s both, ckUp .25s ease 2.85s forwards'))}
       ${verdict(V_5,     A('ckIn .3s ease 2.85s both'))}
       <g style="animation: ckFade 1ms linear 3.6s both"></g>
     `) + caption('opacity:0'),
@@ -452,7 +452,7 @@ const C_BEATS = [
     what: 'The line <b>flies</b> down and shrinks into the history line — <b>entry 5 × 125 kg</b> — and crossfades into it on arrival. Where it was, the readout builds: <b>best for 5 reps · 4 entries ›</b> and an amber <b>125</b>. The verdict stays. On the right the curve assembles and, as the entry lands, cells 4–5 step up.',
     html: () => svg(`
       ${header()}
-      ${bigLine('125', ' style="transform-origin:' + L + 'px ' + NUM_Y + 'px; animation: ckFlyEntry .9s cubic-bezier(.6,0,.25,1) .15s both, ckOut .22s ease 1.05s both"')}
+      ${bigLine('125', ' style="transform-origin:' + L + 'px ' + NUM_Y + 'px; animation: ckFlyEntry .9s cubic-bezier(.6,0,.25,1) .15s forwards, ckOut .22s ease 1.05s forwards"')}
       ${wasLine(A('ckFade .25s ease 1.05s both'))}
       ${readout(READOUT_AFTER, A('ckIn .35s ease .5s both'))}
       ${big('125', 'kg', 'var(--heat)', A('ckIn .45s ease .95s both'))}
