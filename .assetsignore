@@ -13,3 +13,6 @@ node_modules
 package.json
 package-lock.json
 test
+
+# research notes — never part of the site
+docs
