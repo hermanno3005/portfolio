@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<!--
+  PROTOTYPE — throwaway. Wayfinder ticket #10, map #6.
+
+  Question: what are the beats? How does the entry `5 × 120` become `5 × 125`,
+  when does the verdict line arrive and change, how is the entry seen going
+  into the record, and how does the staircase update into the landing frame?
+
+  Three storyboards, switchable via `?variant=`, each a sequence of paints in
+  PaceLab's own technique (one paint per beat, motion in @keyframes, the hold
+  is settle()), and every one of them ends on the landing frame that ticket #9
+  chose (variant A, copied verbatim below), so the closing seam can be judged
+  too. The real PaceLab animation is loadable in the same frame for rhythm.
+
+  Open: prototypes/chalk-storyboard.html  (double-click, or serve the repo)
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>PROTOTYPE — Chalk storyboard</title>
+<link rel="stylesheet" href="../style.css">
+<style>
+  body { margin: 0; background: var(--bg); color: var(--fg); font-family: var(--font); }
+  .proto-wrap { max-width: 900px; margin: 0 auto; padding: 24px 16px 140px; }
+  .proto-label {
+    color: var(--dim); font-size: 11px; letter-spacing: 2px; text-transform: uppercase;
+    margin: 30px 0 8px; border-bottom: 1px solid #1e1e1e; padding-bottom: 6px;
+    display: flex; justify-content: space-between; align-items: baseline;
+  }
+  .proto-label b { color: var(--heat); font-weight: 400; }
+  .proto-note { color: var(--dim); font-size: 12px; line-height: 1.6; margin: 10px 0 0; }
+  .proto-note code { color: var(--cyan); }
+  .demo-frame { white-space: normal; min-height: 368px; }
+  .demo-frame svg { display: block; width: 100%; height: auto; }
+
+  /* ── the state panel: not part of the design under evaluation ── */
+  .panel { margin-top: 14px; border: 1px solid #1e1e1e; border-radius: 6px; padding: 12px 14px; font-size: 12px; }
+  .panel .row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 10px; }
+  .panel button, .panel select {
+    font: inherit; font-size: 12px; background: #161616; color: var(--fg); border: 1px solid #2a2a2a;
+    border-radius: 4px; padding: 4px 10px; cursor: pointer;
+  }
+  .panel button:hover { border-color: var(--dim); }
+  .panel button.primary { border-color: var(--heat); color: var(--heat); }
+  .panel .clock { color: var(--dim); margin-left: auto; font-variant-numeric: tabular-nums; }
+  .beats { display: grid; grid-template-columns: auto auto 1fr auto; gap: 4px 12px; align-items: baseline; }
+  .beats .n { color: var(--dim); }
+  .beats .len { color: var(--cyan); text-align: right; font-variant-numeric: tabular-nums; }
+  .beats .what { color: var(--dim); line-height: 1.5; }
+  .beats .what b { color: var(--fg); font-weight: 400; }
+  .beats .live .n, .beats .live .what { color: var(--fg); }
+  .beats .live .n { color: var(--heat); }
+  .bar { height: 3px; background: #1e1e1e; border-radius: 2px; margin: 10px 0 0; position: relative; overflow: hidden; }
+  .bar i { position: absolute; left: 0; top: 0; bottom: 0; background: var(--heat); width: 0; }
+
+  .switcher {
+    position: fixed; left: 50%; bottom: 18px; transform: translateX(-50%);
+    display: flex; align-items: center; gap: 4px;
+    background: #f5f5f5; color: #111; border-radius: 999px;
+    box-shadow: 0 6px 24px rgba(0,0,0,.6); padding: 6px 8px; font-size: 13px; z-index: 10;
+  }
+  .switcher button { font: inherit; border: 0; background: transparent; cursor: pointer; padding: 4px 10px; border-radius: 999px; color: #111; }
+  .switcher button:hover { background: #ddd; }
+  .switcher .name { padding: 0 10px; white-space: nowrap; }
+</style>
+</head>
+<body>
+<div class="proto-wrap">
+
+  <div class="proto-label"><span>Storyboard — <b>Chalk</b>, variant <b id="vk">A</b>: <span id="vname"></span></span><span id="vtag"></span></div>
+  <div class="output-line demo-frame" id="stage"></div>
+
+  <div class="panel">
+    <div class="row">
+      <button class="primary" id="play">▶ Play (space)</button>
+      <button id="landing">Landing frame</button>
+      <button id="pacelab">Play PaceLab for rhythm</button>
+      <label>speed <select id="rate"><option value="1">1×</option><option value="0.5">½×</option><option value="0.25">¼×</option></select></label>
+      <span class="clock" id="clock">—</span>
+    </div>
+    <div class="beats" id="beats"></div>
+    <div class="bar"><i id="bar"></i></div>
+  </div>
+
+  <p class="proto-note" id="vnote"></p>
+  <p class="proto-note">
+    Every storyboard ends on ticket #9's landing frame, painted as its own final
+    frame the way the runner does it, so the closing seam is real. Caption copy
+    is still a placeholder (ticket #14). Wordless by design: only the exercise
+    name, the numbers with their units, and the verdict line.
+  </p>
+</div>
+
+<div class="switcher">
+  <button id="prev">←</button>
+  <span class="name"><b id="vk2">A</b> — <span id="vname2"></span></span>
+  <button id="next">→</button>
+</div>
+
+<!-- the real PaceLab demo, with the two globals demos.js reaches for -->
+<script>
+  const DATA = { projects: [{ id: 'pacelab', url: 'https://github.com/hermanno3005/pacelab' }] };
+  const Term = { escHtml: s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])) };
+</script>
+<script src="../js/demos.js"></script>
+
+<script>
+/* ══ Dataset (ticket #8) and geometry (ticket #9, variant A) ═══════════════ */
+
+const EXERCISE = 'BACK SQUAT';
+const BEST_BEFORE = [145, 135, 135, 120, 120, 105, 105, 105, 90, 90, 90, 90];
+const BEST_AFTER  = [145, 135, 135, 125, 125, 105, 105, 105, 90, 90, 90, 90];
+const GHOST = [145.0, 140.5, 136.2, 132.2, 128.4, 124.9, 121.5, 118.3, 115.3, 112.4, 109.6, 107.0];
+const SEL = 5;
+const REPO = 'https://github.com/hermanno3005/Chalk';
+
+/* the verdict line, verbatim from SPEC §6.5, in the three states the taps
+   walk through — and the colour each state carries */
+const V_MATCH = { s: 'Matches your 5-rep best',          fill: 'var(--fg)' };
+const V_25    = { s: 'Beats your 5-rep best by 2.5 kg',  fill: 'var(--green)' };
+const V_5     = { s: 'Beats your 5-rep best by 5 kg',    fill: 'var(--green)' };
+
+const VIEW_W = 868, VIEW_H = 300;
+const GRID = '#1e1e1e', TICK = '#3a3f47', MUTED = '#4b515a';
+
+/* the left column, exactly where #9 put it */
+const L = 70, HEAD_Y = 72, READ_Y = 96, NUM_Y = 176, NUM = 76, UNIT = 20, VERDICT_Y = 206, WAS_Y = 230;
+const READOUT_AFTER  = `best for ${SEL} reps · 4 entries ›`;
+const READOUT_BEFORE = `best for ${SEL} reps · 3 entries ›`;
+const WAS_LINE = 'was 120 kg · entry 5 × 125 kg';
+
+/* one glyph's advance at the giant size, tracked −2 — so the unit follows the
+   number as it grows from `5` to `122.5`, and `125` lands the unit exactly at
+   L + 158, where the landing frame draws it */
+const ADV = NUM * 0.6 - 2;
+const unitX = s => L + s.length * ADV + 27.2;
+const SMALL_ADV = 12 * 0.6;
+
+/* the plot */
+const P = { x0: 392, x1: 800, y0: 62, y1: 224 };
+const TOP = 150, BOT = 85;
+const X = n => P.x0 + (n - 1) * (P.x1 - P.x0) / 11;
+const Y = w => P.y0 + (w - TOP) / (BOT - TOP) * (P.y1 - P.y0);
+const HALF = (X(2) - X(1)) / 2;
+const RISE = Y(125) - Y(120);            /* negative: up, ~14px */
+const kg = w => (w % 1 ? w.toFixed(1) : String(w));
+const f = v => v.toFixed(1);
+
+const DEFS = `<defs>
+  <filter id="ck-glow" x="-50%" y="-50%" width="200%" height="200%">
+    <feGaussianBlur stdDeviation="3.5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+  </filter>
+</defs>`;
+
+/* the keyframes every beat may use; delays ride on the elements */
+const KEYFRAMES = `<style>
+  @keyframes ckFade   { from { opacity: 0 } to { opacity: 1 } }
+  @keyframes ckOut    { from { opacity: 1 } to { opacity: 0 } }
+  @keyframes ckIn     { from { opacity: 0; transform: translateY(10px) } to { opacity: 1; transform: translateY(0) } }
+  @keyframes ckUp     { from { opacity: 1; transform: translateY(0) } to { opacity: 0; transform: translateY(-10px) } }
+  @keyframes ckDraw   { to { stroke-dashoffset: 0 } }
+  @keyframes ckHeat   { from { fill: var(--fg) } to { fill: var(--heat) } }
+  @keyframes ckDim    { from { opacity: 1 } to { opacity: .28 } }
+  @keyframes ckUndim  { from { opacity: .28 } to { opacity: 1 } }
+  @keyframes ckPop    { 0% { opacity: 0; transform: scale(.6) } 35% { opacity: 1; transform: scale(1.15) } 100% { opacity: 0; transform: scale(1) } }
+  @keyframes ckRise   { to { transform: translateY(${f(RISE)}px) } }
+  @keyframes ckRiserA { to { transform: scaleY(${f((135 - 125) / (135 - 120))}) } }
+  @keyframes ckRiserB { to { transform: scaleY(${f((125 - 105) / (120 - 105))}) } }
+  @keyframes ckHot    { to { fill: var(--heat); transform: translateY(${f(RISE)}px) scale(1.5) } }
+  @keyframes ckFlyReps { to { transform: translate(0px, ${READ_Y - NUM_Y}px) scale(${f(12 / NUM)}) } }
+  @keyframes ckFlyEntry { to { transform: translate(${f(('was 120 kg · entry ').length * SMALL_ADV)}px, ${WAS_Y - NUM_Y}px) scale(${f(12 / NUM)}) } }
+  .ck-draw { stroke-dasharray: 1; stroke-dashoffset: 1; }
+  .ck-vb   { transform-box: view-box; }
+  .ck-dot  { transform-box: fill-box; transform-origin: center; }
+</style>`;
+
+/* ── text helpers ── */
+const t = (x, y, size, fill, s, extra = '') => `<text x="${x}" y="${y}" font-size="${size}" fill="${fill}"${extra}>${s}</text>`;
+const A = (spec) => ` style="animation:${spec}"`;
+const header = (anim = '') => t(L, HEAD_Y, 11, MUTED, EXERCISE, ` letter-spacing="2"${anim}`);
+const readout = (s, anim = '') => t(L, READ_Y, 12, MUTED, s, anim);
+const verdict = (v, anim = '') => t(L, VERDICT_Y, 13, v.fill, v.s, anim);
+const wasLine = (anim = '') => t(L, WAS_Y, 12, MUTED, WAS_LINE, anim);
+
+/* a giant number with its unit riding beside it */
+function big(s, unit, fill, anim = '', id = '') {
+  return `<g${id ? ` id="${id}"` : ''} class="ck-vb"${anim}>${t(L, NUM_Y, NUM, fill, s, ' font-weight="300" letter-spacing="-2"')}${t(unitX(s), NUM_Y, UNIT, TICK, unit)}</g>`;
+}
+/* a `+` that pops beside the unit at the instant of a tap */
+function tap(s, at) {
+  const x = unitX(s) + 44;
+  return `<text class="ck-vb" x="${x}" y="${NUM_Y - 26}" font-size="22" fill="var(--heat)" text-anchor="middle" style="transform-origin:${x}px ${NUM_Y - 34}px; animation: ckPop .5s ease ${at}s both">+</text>`;
+}
+
+/* ── the plot ── */
+function chrome(anim = '') {
+  const rows = [90, 105, 120, 135, 150].map(w => `
+    <line x1="${P.x0 - 10}" y1="${Y(w)}" x2="${P.x1 + 10}" y2="${Y(w)}" stroke="${GRID}" stroke-width="1"/>
+    <text x="${P.x0 - 18}" y="${Y(w) + 4}" fill="${TICK}" font-size="11" text-anchor="end">${kg(w)}</text>`).join('');
+  const xs = [1, 3, 5, 8, 12].map(n => `
+    <text x="${X(n)}" y="${P.y1 + 24}" fill="${MUTED}" font-size="11" text-anchor="middle">${n}</text>`).join('');
+  return `<g${anim}>
+    <text x="${P.x0}" y="40" font-size="11" letter-spacing="2"><tspan fill="${MUTED}">STRENGTH CURVE · </tspan><tspan fill="var(--cyan)" opacity=".6">GHOST</tspan></text>
+    ${rows}${xs}
+    <text x="${(P.x0 + P.x1) / 2}" y="${P.y1 + 44}" fill="${MUTED}" font-size="10" letter-spacing="2" text-anchor="middle">REPS</text>
+  </g>`;
+}
+const ghostD = GHOST.map((w, i) => `${i ? 'L' : 'M'}${f(X(i + 1))},${f(Y(w))}`).join(' ');
+const ghost = (extra = '') => `<path${extra} d="${ghostD}" fill="none" stroke="var(--cyan)" stroke-width="1.5" stroke-opacity=".45" stroke-dasharray="5 4"/>`;
+
+/* the landing frame's own staircase: one path, as #9 drew it */
+function stair(vals) {
+  let d = '';
+  vals.forEach((w, i) => {
+    const n = i + 1;
+    const l = Math.max(X(n) - HALF, X(1)), r = Math.min(X(n) + HALF, X(12));
+    d += `${i ? ' L' : 'M'}${f(l)},${f(Y(w))} L${f(r)},${f(Y(w))}`;
+  });
+  return d;
+}
+const dots = (vals, hot) => vals.map((w, i) => {
+  const n = i + 1, hit = hot && (n === 4 || n === SEL);
+  return `<circle cx="${f(X(n))}" cy="${f(Y(w))}" r="${hit ? 4.5 : 3}" fill="${hit ? 'var(--heat)' : 'var(--green)'}"/>`;
+}).join('');
+
+/* The staircase in five pieces, so the two floored cells can *move*: the
+   plateau of 4–5 translates up 5 kg, the riser above it shortens and the riser
+   below it lengthens (scaled about the end that stays put), and the two dots
+   go with it and turn --heat. The whole thing draws in left to right on a
+   pathLength clock, the way PaceLab's season does.
+
+     draw:  when the drawing starts (s)     rise: when the cells move (s)
+   Pass `rise: null` for a staircase that is already risen, or `draw: null`
+   for one already drawn. */
+function staircase({ draw = null, rise = null, dotsAt = null } = {}) {
+  const xa = X(3) + HALF, xb = X(5) + HALF;
+  const y0 = rise === null ? Y(125) : Y(120);          /* where the plateau starts */
+  const s1 = `M${f(X(1))},${f(Y(145))} L${f(X(1) + HALF)},${f(Y(145))} L${f(X(1) + HALF)},${f(Y(135))} L${f(xa)},${f(Y(135))}`;
+  const s2 = `M${f(xb)},${f(Y(105))} L${f(X(8) + HALF)},${f(Y(105))} L${f(X(8) + HALF)},${f(Y(90))} L${f(X(12))},${f(Y(90))}`;
+  /* draw budget, in x-units of the twelve-cell axis: the risers get a token
+     slice so the pen is seen turning the corner */
+  const units = [2.5, 0.12, 2, 0.12, 6.5], per = 1.1 / units.reduce((a, b) => a + b);
+  const at = i => draw + units.slice(0, i).reduce((a, b) => a + b, 0) * per;
+  const ease = 'cubic-bezier(.4,0,.2,1)';
+  /* one piece: its draw-in (if drawing) and its move (if rising), as one
+     animation list on the element */
+  const piece = (i, markup, move = '', origin = '') => {
+    const list = [
+      draw === null ? '' : `ckDraw ${f(units[i] * per)}s linear ${f(at(i))}s both`,
+      rise === null || !move ? '' : `${move} .5s ${ease} ${rise}s both`,
+    ].filter(Boolean).join(', ');
+    const style = `${origin ? `transform-origin:${origin};` : ''}${list ? ` animation:${list}` : ''}`;
+    return markup(`${draw === null ? '' : ' class="ck-vb ck-draw" pathLength="1"'}${draw === null ? ' class="ck-vb"' : ''}${style ? ` style="${style}"` : ''}`);
+  };
+  const dot = (n, w) => {
+    const hot = n === 4 || n === SEL, risen = hot && rise === null;
+    const list = [
+      dotsAt === null ? '' : `ckFade .25s ease ${f(dotsAt + (n - 1) * 0.085)}s both`,
+      hot && rise !== null ? `ckHot .5s ${ease} ${rise}s both` : '',
+    ].filter(Boolean).join(', ');
+    return `<circle class="ck-dot" cx="${f(X(n))}" cy="${f(Y(w))}" r="${risen ? 4.5 : 3}" fill="${risen ? 'var(--heat)' : 'var(--green)'}"${list ? ` style="animation:${list}"` : ''}/>`;
+  };
+  const vals = rise === null ? BEST_AFTER : BEST_BEFORE;
+  return `<g fill="none" stroke="var(--green)" stroke-width="2.5" filter="url(#ck-glow)">
+    ${piece(0, a => `<path${a} d="${s1}"/>`)}
+    ${piece(1, a => `<line${a} x1="${f(xa)}" y1="${f(Y(135))}" x2="${f(xa)}" y2="${f(y0)}" stroke-linecap="square"/>`, 'ckRiserA', `${f(xa)}px ${f(Y(135))}px`)}
+    ${piece(2, a => `<line${a} x1="${f(xa)}" y1="${f(y0)}" x2="${f(xb)}" y2="${f(y0)}"/>`, 'ckRise')}
+    ${piece(3, a => `<line${a} x1="${f(xb)}" y1="${f(y0)}" x2="${f(xb)}" y2="${f(Y(105))}" stroke-linecap="square"/>`, 'ckRiserB', `${f(xb)}px ${f(Y(105))}px`)}
+    ${piece(4, a => `<path${a} d="${s2}"/>`)}
+  </g>
+  <g fill="var(--green)" stroke="none">${vals.map((w, i) => dot(i + 1, w)).join('')}</g>`;
+}
+
+/* ── the caption: placeholder copy, real structure (present in every paint so
+      the frame's height is fixed from the first one) ── */
+function caption(style = '') {
+  return `<div class="demo-caption"${style ? ` style="${style}"` : ''}>
+    <div>🏋️ <span class="green bold">Chalk</span> · best for 5 reps <span class="heat">125 kg</span> <span class="dim">(was 120 kg)</span></div>
+    <div class="dim">Back Squat · entry <span class="cyan">5 × 125 kg</span> · ${V_5.s}</div>
+    <div><span class="link" data-url="${REPO}">${REPO.replace(/^https?:\/\//, '')}</span></div>
+  </div>`;
+}
+const CAP_IN = at => `animation: ckFade .5s ease ${at}s both`;
+
+const svg = inner => `<svg viewBox="0 0 ${VIEW_W} ${VIEW_H}" font-family="var(--font)" aria-hidden="true">${KEYFRAMES}${DEFS}${inner}</svg>`;
+
+/* ══ The landing frame — ticket #9's variant A, verbatim ═══════════════════ */
+function landing() {
+  return `<svg viewBox="0 0 ${VIEW_W} ${VIEW_H}" font-family="var(--font)" aria-hidden="true">
+    ${DEFS}
+    ${header()}
+    ${readout(READOUT_AFTER)}
+    <text x="${L}" y="${NUM_Y}" font-size="${NUM}" font-weight="300" letter-spacing="-2" fill="var(--heat)">125</text>
+    <text x="${L + 158}" y="${NUM_Y}" font-size="${UNIT}" fill="${TICK}">kg</text>
+    ${verdict(V_5)}
+    ${wasLine()}
+    ${chrome()}
+    ${ghost()}
+    <path d="${stair(BEST_AFTER)}" fill="none" stroke="var(--green)" stroke-width="2.5" filter="url(#ck-glow)"/>
+    ${dots(BEST_AFTER, true)}
+  </svg>` + caption();
+}
+
+/* ══ Storyboard A — the sheet becomes the readout ══════════════════════════
+   Chalk's own log, stage for stage, in the column where the readout will be.
+   Beat 1: reps, Next, weight, the verdict wakes up.  Beat 2: two taps.
+   Beat 3: Save — the sheet's chip turns into the readout line and the number
+   turns amber, while the strength curve assembles on the right and the two
+   floored cells step up. The sheet never leaves: it *is* the readout. */
+const A_BEATS = [
+  {
+    name: 'Reps, then weight',
+    what: 'Exercise name. Giant <b>5 reps</b> (the seeded rep count). <b>Next</b>: the 5 shrinks into the stage-two header chip, <b>120 kg</b> takes its place, and the verdict line wakes up under it — <b>Matches your 5-rep best</b>.',
+    html: () => svg(`
+      ${header(A('ckFade .5s ease .1s both'))}
+      ${big('5', 'reps', 'var(--fg)', ' style="transform-origin:' + L + 'px ' + NUM_Y + 'px; animation: ckIn .45s ease .3s both, ckFlyReps .55s cubic-bezier(.6,0,.25,1) 1.3s both, ckOut .2s ease 1.7s both"')}
+      ${readout('5 reps', A('ckFade .25s ease 1.75s both'))}
+      ${big('120', 'kg', 'var(--fg)', A('ckIn .45s ease 1.55s both'))}
+      ${verdict(V_MATCH, A('ckFade .4s ease 2.05s both'))}
+    `) + caption('opacity:0'),
+  },
+  {
+    name: 'Two taps',
+    what: '<b>+</b>: 120 → <b>122.5</b>, the verdict flips green — <b>Beats your 5-rep best by 2.5 kg</b>, the spec’s own sentence. <b>+</b> again: <b>125</b>, <b>by 5 kg</b>. Then a hold: the entry is what it will be saved as.',
+    html: () => svg(`
+      ${header()}
+      ${readout('5 reps')}
+      ${big('120',   'kg', 'var(--fg)', A('ckUp .25s ease .6s both'))}
+      ${big('122.5', 'kg', 'var(--fg)', A('ckIn .3s ease .6s both, ckUp .25s ease 1.5s both'))}
+      ${big('125',   'kg', 'var(--fg)', A('ckIn .3s ease 1.5s both'))}
+      ${tap('120', 0.5)}${tap('122.5', 1.4)}
+      ${verdict(V_MATCH, A('ckUp .25s ease .65s both'))}
+      ${verdict(V_25,    A('ckIn .3s ease .65s both, ckUp .25s ease 1.55s both'))}
+      ${verdict(V_5,     A('ckIn .3s ease 1.55s both'))}
+      <g style="animation: ckFade 1ms linear 2.5s both"></g>
+    `) + caption('opacity:0'),
+  },
+  {
+    name: 'Save — into the record',
+    what: '<b>Save</b>: the chip becomes <b>best for 5 reps · 4 entries ›</b> and 125 turns amber — the sheet has become the readout. The axes, the ghost and the <b>old</b> staircase assemble on the right; then cells 4–5 step up 5 kg and light amber. The history line and the caption arrive last.',
+    html: () => svg(`
+      ${header()}
+      ${readout('5 reps', A('ckUp .3s ease .2s both'))}
+      ${readout(READOUT_AFTER, A('ckIn .35s ease .3s both'))}
+      ${big('125', 'kg', 'var(--fg)', '', 'ck-num')}
+      <style>#ck-num text:first-child { animation: ckHeat .6s linear .3s both }</style>
+      ${verdict(V_5)}
+      ${wasLine(A('ckFade .4s ease 3.1s both'))}
+      ${chrome(A('ckFade .5s ease .4s both'))}
+      ${ghost(' class="ck-draw" pathLength="1" style="animation: ckDraw .8s cubic-bezier(.45,0,.35,1) .7s both"')}
+      ${staircase({ draw: 1.0, dotsAt: 1.05, rise: 2.6 })}
+    `) + caption(CAP_IN(3.2)),
+  },
+];
+
+/* ══ Storyboard B — the detail screen first, the sheet over it ════════════
+   Open on Chalk's detail screen as it stands *before* the entry: readout
+   `best for 5 reps · 3 entries ›`, 120 kg, the old staircase with cell 5
+   selected. The log sheet opens over it — the curve dims behind — and plays
+   out; Save brings the curve back and the cells step up. Before and after,
+   with the before on screen the whole time. */
+const B_BEATS = [
+  {
+    name: 'The detail screen, before',
+    what: 'Everything the app shows before the entry: <b>best for 5 reps · 3 entries ›</b>, <b>120 kg</b> in plain white, the old staircase with the ghost behind it, cell 5 enlarged as the default selection. Then the sheet opens: readout out, curve dims, giant <b>5 reps</b> in.',
+    html: () => svg(`
+      ${header(A('ckFade .5s ease .1s both'))}
+      ${readout(READOUT_BEFORE, A('ckFade .5s ease .2s both, ckUp .3s ease 1.5s both'))}
+      ${big('120', 'kg', 'var(--fg)', A('ckFade .5s ease .2s both, ckUp .3s ease 1.5s both'))}
+      <g style="animation: ckFade .6s ease .3s both, ckDim .5s ease 1.5s both">
+        ${chrome()}${ghost()}
+        <path d="${stair(BEST_BEFORE)}" fill="none" stroke="var(--green)" stroke-width="2.5" filter="url(#ck-glow)"/>
+        ${BEST_BEFORE.map((w, i) => `<circle cx="${f(X(i + 1))}" cy="${f(Y(w))}" r="${i + 1 === SEL ? 4.5 : 3}" fill="var(--green)"/>`).join('')}
+      </g>
+      ${big('5', 'reps', 'var(--fg)', A('ckIn .45s ease 1.85s both'))}
+      <g style="animation: ckFade 1ms linear 2.5s both"></g>
+    `) + caption('opacity:0'),
+  },
+  {
+    name: 'The sheet: reps, weight, two taps',
+    what: 'Over the dimmed curve: <b>Next</b> shrinks the 5 into the header chip, <b>120 kg</b> arrives with <b>Matches your 5-rep best</b>; then <b>+</b> 122.5 <b>by 2.5 kg</b>, <b>+</b> 125 <b>by 5 kg</b>.',
+    html: () => svg(`
+      ${header()}
+      <g opacity=".28">
+        ${chrome()}${ghost()}
+        <path d="${stair(BEST_BEFORE)}" fill="none" stroke="var(--green)" stroke-width="2.5" filter="url(#ck-glow)"/>
+        ${BEST_BEFORE.map((w, i) => `<circle cx="${f(X(i + 1))}" cy="${f(Y(w))}" r="${i + 1 === SEL ? 4.5 : 3}" fill="var(--green)"/>`).join('')}
+      </g>
+      ${big('5', 'reps', 'var(--fg)', ' style="transform-origin:' + L + 'px ' + NUM_Y + 'px; animation: ckFlyReps .55s cubic-bezier(.6,0,.25,1) .5s both, ckOut .2s ease .9s both"')}
+      ${readout('5 reps', A('ckFade .25s ease .95s both'))}
+      ${big('120',   'kg', 'var(--fg)', A('ckIn .45s ease .75s both, ckUp .25s ease 1.9s both'))}
+      ${big('122.5', 'kg', 'var(--fg)', A('ckIn .3s ease 1.9s both, ckUp .25s ease 2.7s both'))}
+      ${big('125',   'kg', 'var(--fg)', A('ckIn .3s ease 2.7s both'))}
+      ${tap('120', 1.8)}${tap('122.5', 2.6)}
+      ${verdict(V_MATCH, A('ckFade .4s ease 1.25s both, ckUp .25s ease 1.95s both'))}
+      ${verdict(V_25,    A('ckIn .3s ease 1.95s both, ckUp .25s ease 2.75s both'))}
+      ${verdict(V_5,     A('ckIn .3s ease 2.75s both'))}
+      <g style="animation: ckFade 1ms linear 3.5s both"></g>
+    `) + caption('opacity:0'),
+  },
+  {
+    name: 'Save — the curve reacts',
+    what: '<b>Save</b>: chip → <b>4 entries</b>, 125 turns amber, the curve comes back to full strength and cells 4–5 <b>step up</b> against the frame the visitor already knows. History line, caption.',
+    html: () => svg(`
+      ${header()}
+      ${readout('5 reps', A('ckUp .3s ease .2s both'))}
+      ${readout(READOUT_AFTER, A('ckIn .35s ease .3s both'))}
+      ${big('125', 'kg', 'var(--fg)', '', 'ck-num')}
+      <style>#ck-num text:first-child { animation: ckHeat .6s linear .3s both }</style>
+      ${verdict(V_5)}
+      ${wasLine(A('ckFade .4s ease 1.7s both'))}
+      <g style="animation: ckUndim .5s ease .4s both">
+        ${chrome()}${ghost()}
+        ${staircase({ rise: 1.1 })}
+      </g>
+    `) + caption(CAP_IN(1.9)),
+  },
+];
+
+/* ══ Storyboard C — the entry line flies into the record ══════════════════
+   The terminal's idiom rather than the phone's: the entry is *one line*,
+   `5 × 125 kg`, built left to right — reps, then weight, so the two stages
+   are the order the line is written in — with the verdict live beneath it.
+   Then, PaceLab's rhyme: the line flies down and shrinks into the history
+   line (`entry 5 × 125 kg`), the readout builds where it was, and the curve
+   assembles and steps up as the entry lands. The entry goes into the record
+   literally. */
+const ENTRY_X = L + 4 * ADV;                 /* where the weight starts after `5 × ` */
+const bigLine = (w, anim = '', id = '') =>
+  `<g${id ? ` id="${id}"` : ''} class="ck-vb"${anim}>${t(L, NUM_Y, NUM, 'var(--fg)', '5 ×', ' font-weight="300" letter-spacing="-2"')}${t(ENTRY_X, NUM_Y, NUM, 'var(--fg)', w, ' font-weight="300" letter-spacing="-2"')}${t(ENTRY_X + w.length * ADV + 27.2, NUM_Y, UNIT, TICK, 'kg')}</g>`;
+const cTap = (w, at) => { const x = ENTRY_X + w.length * ADV + 27.2 + 44; return `<text class="ck-vb" x="${x}" y="${NUM_Y - 26}" font-size="22" fill="var(--heat)" text-anchor="middle" style="transform-origin:${x}px ${NUM_Y - 34}px; animation: ckPop .5s ease ${at}s both">+</text>`; };
+
+const C_BEATS = [
+  {
+    name: 'The entry, written',
+    what: 'Exercise name. <b>5 ×</b> appears alone — the reps stage. Then <b>120 kg</b> completes the line and the verdict wakes: <b>Matches</b>. <b>+</b> 122.5 <b>by 2.5 kg</b>, <b>+</b> 125 <b>by 5 kg</b>. One line the whole time, growing to the right.',
+    html: () => svg(`
+      ${header(A('ckFade .5s ease .1s both'))}
+      <g class="ck-vb"${A('ckIn .45s ease .3s both')}>${t(L, NUM_Y, NUM, 'var(--fg)', '5 ×', ' font-weight="300" letter-spacing="-2"')}</g>
+      <g class="ck-vb"${A('ckIn .45s ease 1.1s both, ckUp .25s ease 2.0s both')}>${t(ENTRY_X, NUM_Y, NUM, 'var(--fg)', '120', ' font-weight="300" letter-spacing="-2"')}${t(ENTRY_X + 3 * ADV + 27.2, NUM_Y, UNIT, TICK, 'kg')}</g>
+      <g class="ck-vb"${A('ckIn .3s ease 2.0s both, ckUp .25s ease 2.8s both')}>${t(ENTRY_X, NUM_Y, NUM, 'var(--fg)', '122.5', ' font-weight="300" letter-spacing="-2"')}${t(ENTRY_X + 5 * ADV + 27.2, NUM_Y, UNIT, TICK, 'kg')}</g>
+      <g class="ck-vb"${A('ckIn .3s ease 2.8s both')}>${t(ENTRY_X, NUM_Y, NUM, 'var(--fg)', '125', ' font-weight="300" letter-spacing="-2"')}${t(ENTRY_X + 3 * ADV + 27.2, NUM_Y, UNIT, TICK, 'kg')}</g>
+      ${cTap('120', 1.9)}${cTap('122.5', 2.7)}
+      ${verdict(V_MATCH, A('ckFade .4s ease 1.55s both, ckUp .25s ease 2.05s both'))}
+      ${verdict(V_25,    A('ckIn .3s ease 2.05s both, ckUp .25s ease 2.85s both'))}
+      ${verdict(V_5,     A('ckIn .3s ease 2.85s both'))}
+      <g style="animation: ckFade 1ms linear 3.6s both"></g>
+    `) + caption('opacity:0'),
+  },
+  {
+    name: 'Into the record',
+    what: 'The line <b>flies</b> down and shrinks into the history line — <b>entry 5 × 125 kg</b> — and crossfades into it on arrival. Where it was, the readout builds: <b>best for 5 reps · 4 entries ›</b> and an amber <b>125</b>. The verdict stays. On the right the curve assembles and, as the entry lands, cells 4–5 step up.',
+    html: () => svg(`
+      ${header()}
+      ${bigLine('125', ' style="transform-origin:' + L + 'px ' + NUM_Y + 'px; animation: ckFlyEntry .9s cubic-bezier(.6,0,.25,1) .15s both, ckOut .22s ease 1.05s both"')}
+      ${wasLine(A('ckFade .25s ease 1.05s both'))}
+      ${readout(READOUT_AFTER, A('ckIn .35s ease .5s both'))}
+      ${big('125', 'kg', 'var(--heat)', A('ckIn .45s ease .95s both'))}
+      ${verdict(V_5)}
+      ${chrome(A('ckFade .5s ease .4s both'))}
+      ${ghost(' class="ck-draw" pathLength="1" style="animation: ckDraw .8s cubic-bezier(.45,0,.35,1) .7s both"')}
+      ${staircase({ draw: 1.0, dotsAt: 1.05, rise: 2.4 })}
+    `) + caption(CAP_IN(2.9)),
+  },
+];
+
+const VARIANTS = {
+  A: { name: 'The sheet becomes the readout', beats: A_BEATS, tag: '3 beats',
+       note: 'Stage-faithful to the app. The left column is the log sheet until Save, then it is the readout — the chip morphs into the readout line, the number goes amber, nothing leaves. The curve does not exist until the entry is committed, so the rise is the last thing to move and the only thing the right side ever changes.' },
+  B: { name: 'Detail screen first, sheet over it', beats: B_BEATS, tag: '3 beats',
+       note: 'Before and after. The visitor sees the old staircase and the old 120 before anything is logged, so the change at the end is measured against something they have already read. Costs a beat up front, and the curve is on screen while the sheet plays out (dimmed).' },
+  C: { name: 'The entry line flies into the record', beats: C_BEATS, tag: '2 beats',
+       note: 'The terminal’s idiom: the entry is one line, written left to right, and it goes into the record by flying into the history line — PaceLab’s rhyme. Shortest of the three, and the only one where “the entry going into the record” is literal motion rather than a colour change.' },
+};
+
+/* ══ The player — a stand-in for the runner’s frame ══════════════════════ */
+
+const stage = document.getElementById('stage');
+let run = 0, rate = 1, t0 = 0, raf = 0;
+
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const anims = () => stage.getAnimations({ subtree: true });
+function paint(html) {
+  stage.innerHTML = html;
+  for (const a of anims()) a.playbackRate = rate;
+}
+/* the runner's settle(): a beat is over when its keyframes are */
+async function settle() {
+  const list = anims();
+  if (!list.length) return sleep(800 / rate);
+  await Promise.all(list.map(a => a.finished.catch(() => {})));
+}
+/* the beat's own length, read off its keyframes rather than declared twice */
+function beatLength() {
+  let end = 0;
+  for (const a of anims()) { const tm = a.effect.getTiming(); end = Math.max(end, (tm.delay + tm.duration * tm.iterations) / 1000); }
+  return end;
+}
+
+function tick() {
+  document.getElementById('clock').textContent = `${((performance.now() - t0) / 1000).toFixed(2)} s`;
+  raf = requestAnimationFrame(tick);
+}
+function startClock() { t0 = performance.now(); cancelAnimationFrame(raf); tick(); }
+function stopClock() { cancelAnimationFrame(raf); }
+
+function markLive(i) {
+  document.querySelectorAll('.beats .b').forEach((el, k) => el.classList.toggle('live', k === i));
+}
+
+async function playFrom(i0 = 0, hold = false) {
+  const me = ++run;
+  const v = VARIANTS[cur];
+  startClock();
+  const total = v.beats.reduce((s, b) => s + (b.len || 0), 0) + 0.15 * (v.beats.length - 1);
+  let elapsed = 0;
+  for (let i = i0; i < v.beats.length; i++) {
+    paint(v.beats[i].html());
+    v.beats[i].len = beatLength();
+    renderBeats();
+    markLive(i);
+    const bar = document.getElementById('bar');
+    bar.style.transition = 'none'; bar.style.width = `${(elapsed / total) * 100}%`;
+    requestAnimationFrame(() => { bar.style.transition = `width ${v.beats[i].len / rate}s linear`; bar.style.width = `${((elapsed + v.beats[i].len) / total) * 100}%`; });
+    await settle();
+    if (me !== run) return;
+    if (hold) { stopClock(); return; }
+    elapsed += v.beats[i].len;
+    if (i < v.beats.length - 1) { await sleep(150 / rate); if (me !== run) return; elapsed += 0.15; }
+  }
+  /* the runner paints the landing frame afterwards; the seam should be invisible */
+  paint(landing());
+  markLive(-1);
+  stopClock();
+}
+
+function showLanding() { run++; stopClock(); paint(landing()); markLive(-1); }
+
+async function playPacelab() {
+  const me = ++run;
+  startClock();
+  const frame = {
+    paint, el: stage,
+    sleep: ms => sleep(ms / rate),
+    settle: async () => { await settle(); if (me !== run) throw new Error('cancelled'); },
+  };
+  try { await DEMOS.pacelab.play(frame); if (me === run) { DEMOS.pacelab.renderFinal(frame); } } catch {}
+  stopClock();
+}
+
+function renderBeats() {
+  const v = VARIANTS[cur];
+  document.getElementById('beats').innerHTML = v.beats.map((b, i) => `
+    <span class="b" data-i="${i}"><span class="n">beat ${i + 1}</span></span>
+    <span class="b" data-i="${i}"><span class="len">${b.len ? b.len.toFixed(2) + ' s' : '—'}</span></span>
+    <span class="b what" data-i="${i}"><b>${b.name}.</b> ${b.what}</span>
+    <span class="b" data-i="${i}"><button data-hold="${i}">hold here</button> <button data-from="${i}">play from here</button></span>`).join('')
+    + `<span class="n">then</span><span class="len">${(v.beats.reduce((s, b) => s + (b.len || 0), 0) + 0.15 * (v.beats.length - 1)).toFixed(2)} s</span><span class="what">the runner paints the <b>landing frame</b> — no motion, should be invisible</span><span></span>`;
+}
+
+document.getElementById('beats').addEventListener('click', e => {
+  const h = e.target.dataset.hold, p = e.target.dataset.from;
+  if (h !== undefined) playFrom(+h, true);
+  if (p !== undefined) playFrom(+p);
+});
+document.getElementById('play').onclick = () => playFrom(0);
+document.getElementById('landing').onclick = showLanding;
+document.getElementById('pacelab').onclick = playPacelab;
+document.getElementById('rate').onchange = e => { rate = +e.target.value; for (const a of anims()) a.playbackRate = rate; };
+
+/* ── switcher ── */
+const KEYS = Object.keys(VARIANTS);
+let cur = KEYS.includes(new URL(location).searchParams.get('variant')) ? new URL(location).searchParams.get('variant') : 'A';
+
+function show(k) {
+  cur = k;
+  const v = VARIANTS[k];
+  for (const id of ['vk', 'vk2']) document.getElementById(id).textContent = k;
+  for (const id of ['vname', 'vname2']) document.getElementById(id).textContent = v.name;
+  document.getElementById('vtag').textContent = v.tag;
+  document.getElementById('vnote').innerHTML = v.note;
+  /* measure each beat's length once, silently, so the panel can say it */
+  for (const b of v.beats) { if (!b.len) { stage.innerHTML = b.html(); b.len = beatLength(); } }
+  renderBeats();
+  try { const u = new URL(location); u.searchParams.set('variant', k); history.replaceState(null, '', u); } catch {}
+  playFrom(0);
+}
+const step = d => show(KEYS[(KEYS.indexOf(cur) + d + KEYS.length) % KEYS.length]);
+document.getElementById('prev').onclick = () => step(-1);
+document.getElementById('next').onclick = () => step(1);
+addEventListener('keydown', e => {
+  if (/^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName) || e.target.isContentEditable) return;
+  if (e.key === 'ArrowLeft') step(-1);
+  if (e.key === 'ArrowRight') step(1);
+  if (e.key === ' ') { e.preventDefault(); playFrom(0); }
+});
+show(cur);
+</script>
+</body>
+</html>
