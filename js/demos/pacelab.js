@@ -1,33 +1,3 @@
-/* ── Demos ──
- *
- * A demo is what a runnable project runs: an object the terminal's foreground
- * runner drives, never a command handler of its own.
- *
- *   regDemo('pacelab', {
- *     height,                     // pixels; reserves min-height at insert
- *     minCols,                    // below this many columns, play() is skipped
- *     renderFinal(frame),         // synchronous; depends on no animation state
- *     async play(frame, signal),  // the animation; never draws the ending itself
- *   });
- *
- * `frame` is exactly four members — `paint(html)`, `el`, `sleep(ms)` and
- * `settle(fallbackMs)`. No command `ctx`: every member of it is forbidden,
- * harmful or irrelevant here.
- *
- * This registry is resolved at *run* time, which is what makes this file
- * load-order-free — necessary because the language boot fires while data.js is
- * still being parsed, before any later script exists.
- *
- * Its own file rather than another entry in the commands grab-bag: a
- * multi-second animation with frame data will be the largest single thing on
- * this site. A `demos/` directory would be structure paying for a future that
- * does not exist yet; it becomes one the day a second demo does.
- */
-
-const DEMOS = {};
-
-function regDemo(id, demo) { DEMOS[id] = demo; }
-
 /* ══════════════════════════════════════════════════════════════════════════
    PaceLab — the landing frame
 
@@ -185,31 +155,12 @@ const PACELAB_CHART = `<svg viewBox="0 0 ${PACELAB_VIEW_W} ${PACELAB_VIEW_H}" fo
    correction — only grade and heat are coloured as applied cost, and the wind
    term says so in words.
 
-   `style` is how the beats keep it present but invisible: the caption is in
-   *every* paint, so the frame's height is fixed from the first one. Introducing
-   it at the end would grow the element mid-run, and the view has already
-   scrolled by then. */
-function pacelabCaption(style = '') {
-  return `<div class="demo-caption"${style ? ` style="${style}"` : ''}>
-  <div>🏃 <span class="green bold">PaceLab</span> · NP <span class="cyan">5:14/km</span> <span class="dim">(ran 5:26/km)</span></div>
-  <div class="dim">⛰️ grade <span class="cyan">+2</span> · 🌡️ heat <span class="heat">+9</span> · 💨 wind +0 s/km (wind not in NP)</div>
-  ${pacelabRepoLine()}
-</div>`;
-}
-
-/* The repo URL is read from the project data rather than written out again
-   here — `project pacelab` already prints it from there, from the same entry
-   whose `runnable` flag is why this demo can be reached at all. Escaped and
-   emitted as the site's own `data-url` span, so the delegated click handler
-   opens it in a new tab exactly as it does everywhere else. Absent from the
-   data, the line is simply not drawn: a link to nowhere is worse than no
-   link. */
-function pacelabRepoLine() {
-  const url = DATA.projects.find(p => p.id === 'pacelab')?.url;
-  if (!url) return '';
-  const shown = Term.escHtml(url.replace(/^https?:\/\//, ''));
-  return `<div><span class="link" data-url="${Term.escHtml(url)}">${shown}</span></div>`;
-}
+   The repo line under it and the `style` that keeps the caption invisible
+   without removing it are `demoCaption`'s, not this file's. */
+const PACELAB_CAPTION = [
+  `<div>🏃 <span class="green bold">PaceLab</span> · NP <span class="cyan">5:14/km</span> <span class="dim">(ran 5:26/km)</span></div>`,
+  `<div class="dim">⛰️ grade <span class="cyan">+2</span> · 🌡️ heat <span class="heat">+9</span> · 💨 wind +0 s/km (wind not in NP)</div>`,
+];
 
 /* ══════════════════════════════════════════════════════════════════════════
    PaceLab — beat one: one number losing weight
@@ -485,7 +436,7 @@ regDemo('pacelab', {
   minCols: 60,
 
   renderFinal(frame) {
-    frame.paint(PACELAB_CHART + pacelabCaption());
+    frame.paint(PACELAB_CHART + demoCaption('pacelab', PACELAB_CAPTION));
   },
 
   /* The whole animation, in three paints: a beat, a beat, and the landing frame
@@ -502,10 +453,10 @@ regDemo('pacelab', {
      left — an explicit breath between the beats, which is not the length of any
      animation and has no keyframes to drift from. */
   async play(frame) {
-    frame.paint(PACELAB_BEAT_ONE + pacelabCaption('opacity:0'));
+    frame.paint(PACELAB_BEAT_ONE + demoCaption('pacelab', PACELAB_CAPTION, 'opacity:0'));
     await frame.settle(4100);
     await frame.sleep(150);
-    frame.paint(PACELAB_BEAT_TWO + pacelabCaption(PACELAB_CAP_IN));
+    frame.paint(PACELAB_BEAT_TWO + demoCaption('pacelab', PACELAB_CAPTION, PACELAB_CAP_IN));
     await frame.settle(4000);
   },
 });

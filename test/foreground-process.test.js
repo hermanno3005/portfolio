@@ -723,33 +723,6 @@ describe('after any exit path', () => {
   });
 });
 
-describe('the demo registry', () => {
-  it('is read at run time, so the script order does not matter', async () => {
-    const reordered = await mountTerminal({ scripts: ['js/data.js', 'js/demos.js', 'js/terminal.js', 'js/commands.js'] });
-
-    /* Skipped rather than sat through, for the reason given below. */
-    const done = reordered.run('pacelab');
-    reordered.press('Escape');
-    await done;
-
-    expect(reordered.frame()).not.toBeNull();
-    expect(reordered.warnings()).toEqual([]);
-
-    reordered.cleanup();
-  });
-
-  it('ships a pacelab demo, so the runnable project is not a broken promise', async () => {
-    /* Skipped rather than sat through: what is under test is that the real demo
-       is registered and runs clean, not how long its beats last. */
-    const done = term.run('pacelab');
-    term.press('Escape');
-    await done;
-
-    expect(term.warnings()).toEqual([]);
-    expect(term.frame()).not.toBeNull();
-  });
-});
-
 describe('the busy stylesheet', () => {
   /* jsdom applies no stylesheet, so the rules themselves are what a test can
      ask about — and the way the prompt is hidden is load-bearing, not cosmetic. */

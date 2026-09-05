@@ -258,7 +258,7 @@ describe('standing alone', () => {
 });
 
 describe('the heat token', () => {
-  const source = () => fs.readFileSync(path.join(ROOT, 'js', 'demos.js'), 'utf8');
+  const source = () => fs.readFileSync(path.join(ROOT, 'js', 'demos', 'pacelab.js'), 'utf8');
 
   it('comes from the site, and is not redeclared here', () => {
     expect(source()).toContain('var(--heat)');
