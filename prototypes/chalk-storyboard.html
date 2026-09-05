@@ -210,13 +210,15 @@ function chrome(anim = '') {
 const ghostD = GHOST.map((w, i) => `${i ? 'L' : 'M'}${f(X(i + 1))},${f(Y(w))}`).join(' ');
 const ghost = (extra = '') => `<path${extra} d="${ghostD}" fill="none" stroke="var(--cyan)" stroke-width="1.5" stroke-opacity=".45" stroke-dasharray="5 4"/>`;
 
-/* the landing frame's own staircase: one path, as #9 drew it */
+/* the landing frame's own staircase: one path. Step-*before*: the plateau
+   for best[n] runs in from n-1 and the drop happens at n itself, on the rep
+   count, so the curve "goes down on the 5 and then over to the 6" — never in
+   the gap between two rep counts. */
 function stair(vals) {
-  let d = '';
+  let d = `M${f(X(1))},${f(Y(vals[0]))}`;
   vals.forEach((w, i) => {
-    const n = i + 1;
-    const l = Math.max(X(n) - HALF, X(1)), r = Math.min(X(n) + HALF, X(12));
-    d += `${i ? ' L' : 'M'}${f(l)},${f(Y(w))} L${f(r)},${f(Y(w))}`;
+    if (i === 0) return;
+    d += ` L${f(X(i))},${f(Y(w))} L${f(X(i + 1))},${f(Y(w))}`;
   });
   return d;
 }
@@ -235,13 +237,13 @@ const dots = (vals, hot) => vals.map((w, i) => {
    Pass `rise: null` for a staircase that is already risen, or `draw: null`
    for one already drawn. */
 function staircase({ draw = null, rise = null, dotsAt = null, riseDur = 0.5 } = {}) {
-  const xa = X(3) + HALF, xb = X(5) + HALF;
+  const xa = X(3), xb = X(5);                          /* the drops at 3 and at 5 */
   const y0 = rise === null ? Y(125) : Y(120);          /* where the plateau starts */
-  const s1 = `M${f(X(1))},${f(Y(145))} L${f(X(1) + HALF)},${f(Y(145))} L${f(X(1) + HALF)},${f(Y(135))} L${f(xa)},${f(Y(135))}`;
-  const s2 = `M${f(xb)},${f(Y(105))} L${f(X(8) + HALF)},${f(Y(105))} L${f(X(8) + HALF)},${f(Y(90))} L${f(X(12))},${f(Y(90))}`;
+  const s1 = `M${f(X(1))},${f(Y(145))} L${f(X(1))},${f(Y(135))} L${f(xa)},${f(Y(135))}`;
+  const s2 = `M${f(xb)},${f(Y(105))} L${f(X(8))},${f(Y(105))} L${f(X(8))},${f(Y(90))} L${f(X(12))},${f(Y(90))}`;
   /* draw budget, in x-units of the twelve-cell axis: the risers get a token
      slice so the pen is seen turning the corner */
-  const units = [2.5, 0.12, 2, 0.12, 6.5], per = 1.1 / units.reduce((a, b) => a + b);
+  const units = [2, 0.12, 2, 0.12, 7], per = 1.1 / units.reduce((a, b) => a + b);
   const at = i => draw + units.slice(0, i).reduce((a, b) => a + b, 0) * per;
   const ease = 'cubic-bezier(.4,0,.2,1)';
   /* one piece: its draw-in (if drawing) and its move (if rising), as one
@@ -278,7 +280,7 @@ function staircase({ draw = null, rise = null, dotsAt = null, riseDur = 0.5 } = 
    by the lift rather than announced), and `+5 kg` floats up with the plateau.
    Both leave again before the landing frame, which carries neither. */
 function riseTrace(at, gone) {
-  const xa = X(3) + HALF, xb = X(5) + HALF;
+  const xa = X(3), xb = X(5);
   return `<g style="animation: ckFade .3s ease ${at}s both, ckOut .5s ease ${gone}s forwards">
     <line x1="${f(xa)}" y1="${f(Y(120))}" x2="${f(xb)}" y2="${f(Y(120))}" stroke="${MUTED}" stroke-width="1.5" stroke-dasharray="3 3"/>
     ${[4, 5].map(n => `<circle cx="${f(X(n))}" cy="${f(Y(120))}" r="3" fill="var(--bg)" stroke="${MUTED}" stroke-width="1.2"/>`).join('')}
@@ -365,7 +367,7 @@ const A_BEATS = [
       ${verdict(V_5)}
       ${wasLine(A('ckFade .4s ease 3.7s both'))}
       ${chrome(A('ckFade .5s ease .3s both'))}
-      ${ghost(' class="ck-draw" pathLength="1" style="animation: ckDraw .8s cubic-bezier(.45,0,.35,1) .5s both"')}
+      ${ghost(A('ckFade .7s ease .5s both'))}
       ${riseTrace(2.3, 4.1)}
       ${staircase({ draw: 0.8, dotsAt: 0.85, rise: 2.3, riseDur: 1.0 })}
       ${riseLabel(2.3, 1.0, 4.1)}
@@ -478,7 +480,7 @@ const C_BEATS = [
       ${big('125', 'kg', 'var(--heat)', A('ckIn .45s ease .95s both'))}
       ${verdict(V_5)}
       ${chrome(A('ckFade .5s ease .4s both'))}
-      ${ghost(' class="ck-draw" pathLength="1" style="animation: ckDraw .8s cubic-bezier(.45,0,.35,1) .7s both"')}
+      ${ghost(A('ckFade .7s ease .7s both'))}
       ${staircase({ draw: 1.0, dotsAt: 1.05, rise: 2.4 })}
     `) + caption(CAP_IN(2.9)),
   },
