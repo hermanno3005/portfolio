@@ -37,6 +37,7 @@ Currently working in OEM projects: prototype development, CAN bus analysis, and 
 
       projectDescriptions: [
         'Python pipeline that strips weather and terrain out of my running data to show the fitness trend underneath - built on the intervals.icu and Open-Meteo APIs.',
+        'iOS strength tracker that derives a strength curve from every entry you log - one number per rep count, never a workout log.',
         'This terminal-style portfolio website - Ghostty-themed, vanilla JS, hosted on Cloudflare.',
         /* TODO: verify wording — and replace the em-dashes with plain hyphens, as the
            active entries above do — then uncomment together with the projects below.
@@ -110,6 +111,7 @@ Derzeit in OEM-Projekten tätig: Prototypenentwicklung, CAN-Bus-Analyse und Pyth
 
       projectDescriptions: [
         'Python-Pipeline, die Wetter und Topografie aus meinen Laufdaten herausrechnet und den Fitness-Trend darunter sichtbar macht - auf Basis der APIs von intervals.icu und Open-Meteo.',
+        'iOS-Krafttracker, der aus jedem erfassten Eintrag eine Kraftkurve ableitet - eine Zahl pro Wiederholungszahl, kein Trainingstagebuch.',
         'Diese terminal-basierte Portfolio-Website - Ghostty-Design, reines JavaScript, gehostet auf Cloudflare.',
         /* TODO: verify wording — and replace the em-dashes with plain hyphens, as the
            active entries above do — then uncomment together with the projects below.
@@ -156,6 +158,16 @@ Derzeit in OEM-Projekten tätig: Prototypenentwicklung, CAN-Bus-Analyse und Pyth
       description: 'normalized pace from grade, heat and wind',
       stack: ['Python', 'SQLite', 'Docker'],
       url: 'https://github.com/hermanno3005/pacelab',
+      runnable: true,
+    },
+    {
+      id: 'chalk',
+      name: 'Chalk',
+      description: 'strength curve derived from every entry',
+      /* One item that is true beats three that are inferred: an iOS app already
+         says Swift. */
+      stack: ['iOS'],
+      url: 'https://github.com/hermanno3005/Chalk',
       runnable: true,
     },
     {
