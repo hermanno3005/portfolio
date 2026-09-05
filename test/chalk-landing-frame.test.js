@@ -361,7 +361,10 @@ describe('every route lands on the same frame', () => {
   });
 
   it('returns the prompt, unfilled', async () => {
-    await term.run('chalk');
+    /* Skipped rather than sat through: `settle()` falls back to real timers in a
+       realm with no animations, so a full run is 9.55 seconds of nothing. The
+       skip lands on the same frame by the same path — that is this block. */
+    await landing();
 
     expect(term.busy()).toBe(false);
     expect(term.inputValue()).toBe('');
