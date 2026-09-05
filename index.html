@@ -65,6 +65,12 @@
       <a class="mc-btn mc-primary" href="assets/CV_Hermann_Aust.pdf" download="Hermann_Aust_CV.pdf">📄 CV — English</a>
       <a class="mc-btn mc-primary" href="assets/Lebenslauf_Hermann_Aust.pdf" download="Hermann_Aust_Lebenslauf.pdf">📄 Lebenslauf — Deutsch</a>
 
+      <!-- // projects — the label and the rows are both built by initMobileCard()
+           from DATA, so a card with nothing to show has no empty section. It sits
+           here, between the CV and the links, so a recruiter reaching for
+           LinkedIn scrolls past what was built. -->
+      <div id="mc-projects"></div>
+
       <div class="mc-label">// links</div>
       <a class="mc-btn" id="mc-linkedin" target="_blank" rel="noopener">→ LinkedIn</a>
       <a class="mc-btn" id="mc-github" target="_blank" rel="noopener">→ GitHub</a>
@@ -90,5 +96,6 @@
        caption chrome, which each demo file calls as it is parsed. -->
   <script src="js/demos/registry.js"></script>
   <script src="js/demos/pacelab.js"></script>
+  <script src="js/demos/chalk.js"></script>
 </body>
 </html>

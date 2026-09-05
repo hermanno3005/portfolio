@@ -37,6 +37,7 @@ Currently working in OEM projects: prototype development, CAN bus analysis, and 
 
       projectDescriptions: [
         'Python pipeline that strips weather and terrain out of my running data to show the fitness trend underneath - built on the intervals.icu and Open-Meteo APIs.',
+        'iOS strength tracker that reads a rep-max out of every entry and keeps the strength curve up to date, so I know what to load at the rack - everything stays on the phone.',
         'This terminal-style portfolio website - Ghostty-themed, vanilla JS, hosted on Cloudflare.',
         /* TODO: verify wording — and replace the em-dashes with plain hyphens, as the
            active entries above do — then uncomment together with the projects below.
@@ -110,6 +111,7 @@ Derzeit in OEM-Projekten tätig: Prototypenentwicklung, CAN-Bus-Analyse und Pyth
 
       projectDescriptions: [
         'Python-Pipeline, die Wetter und Topografie aus meinen Laufdaten herausrechnet und den Fitness-Trend darunter sichtbar macht - auf Basis der APIs von intervals.icu und Open-Meteo.',
+        'iOS-App fürs Krafttraining, die aus jedem Eintrag ein Rep-Max liest und die Kraftkurve aktuell hält, damit ich weiß, was an der Stange liegen muss - alles bleibt auf dem Gerät.',
         'Diese terminal-basierte Portfolio-Website - Ghostty-Design, reines JavaScript, gehostet auf Cloudflare.',
         /* TODO: verify wording — and replace the em-dashes with plain hyphens, as the
            active entries above do — then uncomment together with the projects below.
@@ -149,13 +151,33 @@ Derzeit in OEM-Projekten tätig: Prototypenentwicklung, CAN-Bus-Analyse und Pyth
     },
   },
 
+  /* `cardLine` is what puts a project on the mobile recruiter card, and its own
+     copy while it is there: one short line written for a 390px phone, not the
+     terminal's 59-column paragraph, which wraps four times in a row. The gate is
+     this field rather than `runnable` on purpose — putting work in front of a
+     recruiter is a copy decision, not a side effect of a project happening to
+     have a demo today. ~40 characters is what fits on one line at 12.5px; the
+     card test holds the ceiling at 42. Outside the locale blocks: the card is
+     English-only by design, and answers the German case with a second CV. */
   projects: [
     {
       id: 'pacelab',
       name: 'PaceLab',
       description: 'normalized pace from grade, heat and wind',
+      cardLine: 'normalized pace from grade, heat and wind',
       stack: ['Python', 'SQLite', 'Docker'],
       url: 'https://github.com/hermanno3005/pacelab',
+      runnable: true,
+    },
+    {
+      id: 'chalk',
+      name: 'Chalk',
+      description: 'strength records, read as a curve',
+      cardLine: 'a rep-max out of every entry',
+      /* One item that is true beats three that are inferred: an iOS app already
+         says Swift. */
+      stack: ['iOS'],
+      url: 'https://github.com/hermanno3005/Chalk',
       runnable: true,
     },
     {
