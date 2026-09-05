@@ -27,7 +27,7 @@ function listing(term) {
 
 describe('ls projects/', () => {
   it('lists the runnable project twice — the document and the executable', () => {
-    expect(listing(term)).toBe('pacelab*  pacelab.md  portfolio.md');
+    expect(listing(term)).toBe('pacelab*  pacelab.md  chalk*  chalk.md  portfolio.md');
   });
 
   it('hangs the marker off the name rather than spelling it into the name', () => {
