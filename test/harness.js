@@ -22,10 +22,13 @@
  *      racing a ~1.5s typewriter animation.
  *
  *      The cost is that everything else in that handler is skipped too: the
- *      titlebar buttons and the mobile card. The two pieces tests do need — the
- *      delegated click handler for `data-url` / `data-cmd` links, and the
- *      keydown listener on the input — are each a named function the harness can
- *      call on its own, leaving the animation alone.
+ *      titlebar buttons. The three pieces tests do need — the delegated click
+ *      handler for `data-url` / `data-cmd` links, the keydown listener on the
+ *      input, and the mobile card — are each a named function the harness can
+ *      call on its own, leaving the animation alone. The card is filled on
+ *      every mount rather than on request: it has no timers and no animation,
+ *      so the reason the harness skips the DOM-ready block does not reach it,
+ *      and it composes with the `projects` injection seam for free.
  *
  * Scripts must be <script> elements rather than `window.eval()`: the modules are
  * declared with top-level `const`, which lands in the realm's global lexical
@@ -150,12 +153,13 @@ export async function mountTerminal({ projects, reducedMotion = false, scripts =
   /* Render the prompt the way the boot sequence would, without running it. */
   Term.setCwd(Term.cwd);
 
-  /* The two pieces of the DOM-ready block tests need — see the note above.
+  /* The three pieces of the DOM-ready block tests need — see the note above.
      `Term.wireInput()` is the keyboard half of `Term.init()`, split out for the
      same reason `wireOutputClicks()` was: it lets a test have key handling
      without also starting the boot animation. */
   window.eval('wireOutputClicks()');
   window.eval('Term.wireInput()');
+  window.eval('initMobileCard()');
 
   const cmdInput = window.document.getElementById('cmd-input');
 
@@ -195,6 +199,11 @@ export async function mountTerminal({ projects, reducedMotion = false, scripts =
     /** Register a demo, exactly as a file in `js/demos/` does. */
     regDemo(id, demo) {
       window.eval('regDemo')(id, demo);
+    },
+
+    /** The mobile recruiter card, filled from DATA the way the page fills it. */
+    card() {
+      return window.document.getElementById('mobile-card');
     },
 
     /** The element a running demo owns, or null when nothing is running. */

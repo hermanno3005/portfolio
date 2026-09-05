@@ -393,4 +393,26 @@ html, body {
   .mc-btn:active  { background: #1f1f1f; }
   .mc-primary     { border-color: var(--green); color: var(--green); }
   .mc-footer      { color: var(--dim); font-size: 12px; margin-top: 30px; text-align: center; }
+
+  /* A project row: denser and quieter than the CV and links buttons, because
+     it is something to scan on the way past rather than a thing to tap. The
+     whole row is the link, so the `›` is the only affordance it needs — and
+     there is deliberately no `*` and nothing runnable on it: no demo can play
+     on a touch device, and the footer already says where to go for one. */
+  .mc-proj {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 14px; margin-bottom: 8px;
+    background: #131313; border: 1px solid #222; border-radius: 8px;
+    color: var(--fg); text-decoration: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .mc-proj:active     { background: #1b1b1b; }
+  .mc-proj-body       { flex: 1 1 auto; min-width: 0; }
+  .mc-proj-top        { display: flex; align-items: baseline; gap: 8px; }
+  .mc-proj-name       { color: var(--green); font-size: 15px; }
+  /* The stack yields first: a long one ellipsizes rather than pushing the name
+     or wrapping the row's top line. */
+  .mc-proj-stack      { color: var(--cyan); font-size: 11px; opacity: .85; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .mc-proj-line       { color: var(--dim); font-size: 12.5px; margin-top: 3px; display: block; }
+  .mc-proj-chev       { color: var(--dim); flex: 0 0 auto; }
 }

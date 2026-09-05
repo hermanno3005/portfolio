@@ -482,6 +482,38 @@ function initMobileCard() {
   setHref('mc-linkedin', DATA.links.linkedin);
   setHref('mc-github',   DATA.links.github);
   setHref('mc-email',    DATA.links.email ? `mailto:${DATA.links.email}` : null);
+
+  /* The work, between the CV and the links, so a recruiter reaching for
+     LinkedIn passes it. `cardLine` is the gate rather than `runnable`: a
+     project belongs here because someone wrote a line for the card, not
+     because it happens to have a demo the phone could never play anyway. The
+     label is built here with the rows, so a card with nothing to show has no
+     empty heading. */
+  const projects = document.getElementById('mc-projects');
+  if (!projects) return;
+
+  const rows = DATA.projects.filter(p => p.cardLine);
+  projects.innerHTML = rows.length === 0 ? '' : `<div class="mc-label">// projects</div>` + rows.map(p => {
+    /* The whole row is the link, so the `›` is the only affordance it needs —
+       and it is drawn only when there is somewhere to go. A card line without a
+       URL is an authoring mistake rather than a second gate: say so, and still
+       show the visitor the project rather than dropping it in silence. */
+    if (!p.url) console.warn(`mobile card: '${p.id}' has a cardLine but no url — drawing the row without a link`);
+    const link = p.url
+      ? ` href="${Term.escHtml(p.url)}" target="_blank" rel="noopener"`
+      : '';
+    return `
+    <a class="mc-proj"${link}>
+      <span class="mc-proj-body">
+        <span class="mc-proj-top">
+          <span class="mc-proj-name">${Term.escHtml(p.name)}</span>
+          <span class="mc-proj-stack">${Term.escHtml(p.stack.join(' · '))}</span>
+        </span>
+        <span class="mc-proj-line">${Term.escHtml(p.cardLine)}</span>
+      </span>
+      ${p.url ? '<span class="mc-proj-chev">›</span>' : ''}
+    </a>`;
+  }).join('');
 }
 
 /* Clicks on the output: `data-url` opens a link, `data-cmd` runs a command.
