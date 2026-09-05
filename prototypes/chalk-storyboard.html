@@ -166,7 +166,9 @@ const KEYFRAMES = `<style>
   @keyframes ckRise   { to { transform: translateY(${f(RISE)}px) } }
   @keyframes ckRiserA { to { transform: scaleY(${f((135 - 125) / (135 - 120))}) } }
   @keyframes ckRiserB { to { transform: scaleY(${f((125 - 105) / (120 - 105))}) } }
-  @keyframes ckHot    { to { fill: var(--heat); transform: translateY(${f(RISE)}px) scale(1.5) } }
+  @keyframes ckHot    { 0% { fill: var(--green); transform: translateY(0) scale(1) }
+                        60% { fill: var(--heat); transform: translateY(${f(RISE)}px) scale(2.4) }
+                        100% { fill: var(--heat); transform: translateY(${f(RISE)}px) scale(1.5) } }
   @keyframes ckFlyReps { to { transform: translate(0px, ${READ_Y - NUM_Y}px) scale(${f(12 / NUM)}) } }
   @keyframes ckFlyEntry { to { transform: translate(${f(('was 120 kg · entry ').length * SMALL_ADV)}px, ${WAS_Y - NUM_Y}px) scale(${f(12 / NUM)}) } }
   .ck-draw { stroke-dasharray: 1; stroke-dashoffset: 1; }
@@ -232,7 +234,7 @@ const dots = (vals, hot) => vals.map((w, i) => {
      draw:  when the drawing starts (s)     rise: when the cells move (s)
    Pass `rise: null` for a staircase that is already risen, or `draw: null`
    for one already drawn. */
-function staircase({ draw = null, rise = null, dotsAt = null } = {}) {
+function staircase({ draw = null, rise = null, dotsAt = null, riseDur = 0.5 } = {}) {
   const xa = X(3) + HALF, xb = X(5) + HALF;
   const y0 = rise === null ? Y(125) : Y(120);          /* where the plateau starts */
   const s1 = `M${f(X(1))},${f(Y(145))} L${f(X(1) + HALF)},${f(Y(145))} L${f(X(1) + HALF)},${f(Y(135))} L${f(xa)},${f(Y(135))}`;
@@ -247,7 +249,7 @@ function staircase({ draw = null, rise = null, dotsAt = null } = {}) {
   const piece = (i, markup, move = '', origin = '') => {
     const list = [
       draw === null ? '' : `ckDraw ${f(units[i] * per)}s linear ${f(at(i))}s both`,
-      rise === null || !move ? '' : `${move} .5s ${ease} ${rise}s both`,
+      rise === null || !move ? '' : `${move} ${riseDur}s ${ease} ${rise}s both`,
     ].filter(Boolean).join(', ');
     const style = `${origin ? `transform-origin:${origin};` : ''}${list ? ` animation:${list}` : ''}`;
     return markup(`${draw === null ? '' : ' class="ck-vb ck-draw" pathLength="1"'}${draw === null ? ' class="ck-vb"' : ''}${style ? ` style="${style}"` : ''}`);
@@ -256,7 +258,7 @@ function staircase({ draw = null, rise = null, dotsAt = null } = {}) {
     const hot = n === 4 || n === SEL, risen = hot && rise === null;
     const list = [
       dotsAt === null ? '' : `ckFade .25s ease ${f(dotsAt + (n - 1) * 0.085)}s both`,
-      hot && rise !== null ? `ckHot .5s ${ease} ${rise}s both` : '',
+      hot && rise !== null ? `ckHot ${riseDur}s ${ease} ${rise}s both` : '',
     ].filter(Boolean).join(', ');
     return `<circle class="ck-dot" cx="${f(X(n))}" cy="${f(Y(w))}" r="${risen ? 4.5 : 3}" fill="${risen ? 'var(--heat)' : 'var(--green)'}"${list ? ` style="animation:${list}"` : ''}/>`;
   };
@@ -269,6 +271,22 @@ function staircase({ draw = null, rise = null, dotsAt = null } = {}) {
     ${piece(4, a => `<path${a} d="${s2}"/>`)}
   </g>
   <g fill="var(--green)" stroke="none">${vals.map((w, i) => dot(i + 1, w)).join('')}</g>`;
+}
+
+/* The rise, made the event of the beat: a dashed trace and two hollow marks
+   stay where cells 4–5 stood (drawn *under* the plateau, so they are revealed
+   by the lift rather than announced), and `+5 kg` floats up with the plateau.
+   Both leave again before the landing frame, which carries neither. */
+function riseTrace(at, gone) {
+  const xa = X(3) + HALF, xb = X(5) + HALF;
+  return `<g style="animation: ckFade .3s ease ${at}s both, ckOut .5s ease ${gone}s forwards">
+    <line x1="${f(xa)}" y1="${f(Y(120))}" x2="${f(xb)}" y2="${f(Y(120))}" stroke="${MUTED}" stroke-width="1.5" stroke-dasharray="3 3"/>
+    ${[4, 5].map(n => `<circle cx="${f(X(n))}" cy="${f(Y(120))}" r="3" fill="var(--bg)" stroke="${MUTED}" stroke-width="1.2"/>`).join('')}
+  </g>`;
+}
+function riseLabel(at, dur, gone) {
+  return `<text class="ck-vb" x="${f((X(4) + X(5)) / 2)}" y="${f(Y(120) - 16)}" font-size="13" font-weight="700" fill="var(--heat)" text-anchor="middle"
+    style="animation: ckFade .3s ease ${at}s both, ckRise ${dur}s cubic-bezier(.4,0,.2,1) ${at}s both, ckOut .5s ease ${gone}s forwards">+5 kg</text>`;
 }
 
 /* ── the caption: placeholder copy, real structure (present in every paint so
@@ -337,7 +355,7 @@ const A_BEATS = [
   },
   {
     name: 'Save — into the record',
-    what: '<b>Save</b>: the chip becomes <b>best for 5 reps · 4 entries ›</b> and 125 turns amber — the sheet has become the readout. The axes, the ghost and the <b>old</b> staircase assemble on the right; then cells 4–5 step up 5 kg and light amber. The history line and the caption arrive last.',
+    what: '<b>Save</b>: the chip becomes <b>best for 5 reps · 4 entries ›</b> and 125 turns amber — the sheet has become the readout. The axes, the ghost and the <b>old</b> staircase assemble on the right. A breath. Then cells 4–5 <b>step up 5 kg</b> over a full second: the dots swell and go amber, <b>+5 kg</b> rides up with the plateau, and a dashed trace stays where they were. Trace and label fade; the history line and the caption arrive last.',
     html: () => svg(`
       ${header()}
       ${readout('5 reps', A('ckUp .3s ease .2s forwards'))}
@@ -345,11 +363,13 @@ const A_BEATS = [
       ${big('125', 'kg', 'var(--fg)', '', 'ck-num')}
       <style>#ck-num text:first-child { animation: ckHeat .6s linear .3s both }</style>
       ${verdict(V_5)}
-      ${wasLine(A('ckFade .4s ease 3.1s both'))}
-      ${chrome(A('ckFade .5s ease .4s both'))}
-      ${ghost(' class="ck-draw" pathLength="1" style="animation: ckDraw .8s cubic-bezier(.45,0,.35,1) .7s both"')}
-      ${staircase({ draw: 1.0, dotsAt: 1.05, rise: 2.6 })}
-    `) + caption(CAP_IN(3.2)),
+      ${wasLine(A('ckFade .4s ease 3.7s both'))}
+      ${chrome(A('ckFade .5s ease .3s both'))}
+      ${ghost(' class="ck-draw" pathLength="1" style="animation: ckDraw .8s cubic-bezier(.45,0,.35,1) .5s both"')}
+      ${riseTrace(2.3, 4.1)}
+      ${staircase({ draw: 0.8, dotsAt: 0.85, rise: 2.3, riseDur: 1.0 })}
+      ${riseLabel(2.3, 1.0, 4.1)}
+    `) + caption(CAP_IN(4.0)),
   },
 ];
 
