@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<!--
+  PROTOTYPE — throwaway. Wayfinder ticket #9, map #6.
+
+  Question: what does Chalk's landing frame look like?
+
+  Three variants of the Chalk landing frame, switchable via `?variant=`,
+  each rendered directly under the *real* PaceLab landing frame (loaded from
+  ../js/demos.js, so it cannot drift) inside the site's real `.demo-frame`
+  chrome and real palette. Side by side is the whole point of the ticket.
+
+  Open: prototypes/chalk-landing-frame.html  (double-click, or serve the repo)
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>PROTOTYPE — Chalk landing frame</title>
+<link rel="stylesheet" href="../style.css">
+<style>
+  body { margin: 0; background: var(--bg); color: var(--fg); font-family: var(--font); }
+  .proto-wrap { max-width: 900px; margin: 0 auto; padding: 24px 16px 120px; }
+  .proto-label {
+    color: var(--dim); font-size: 11px; letter-spacing: 2px; text-transform: uppercase;
+    margin: 34px 0 8px; border-bottom: 1px solid #1e1e1e; padding-bottom: 6px;
+  }
+  .proto-label b { color: var(--heat); font-weight: 400; }
+  .proto-note { color: var(--dim); font-size: 12px; line-height: 1.6; margin: 10px 0 0; }
+  .proto-note code { color: var(--cyan); }
+  .demo-frame { white-space: normal; }
+  .demo-frame svg { display: block; width: 100%; height: auto; }
+
+  /* deliberately not part of the design under evaluation */
+  .switcher {
+    position: fixed; left: 50%; bottom: 18px; transform: translateX(-50%);
+    display: flex; align-items: center; gap: 4px;
+    background: #f5f5f5; color: #111; border-radius: 999px;
+    box-shadow: 0 6px 24px rgba(0,0,0,.6); padding: 6px 8px; font-size: 13px; z-index: 10;
+  }
+  .switcher button {
+    font: inherit; border: 0; background: transparent; cursor: pointer;
+    padding: 4px 10px; border-radius: 999px; color: #111;
+  }
+  .switcher button:hover { background: #ddd; }
+  .switcher .name { padding: 0 10px; white-space: nowrap; }
+</style>
+</head>
+<body>
+<div class="proto-wrap">
+
+  <div class="proto-label">Reference — <b>PaceLab</b> landing frame (the real one, from js/demos.js)</div>
+  <div class="output-line demo-frame" id="pacelab"></div>
+
+  <div class="proto-label">Candidate — <b>Chalk</b> landing frame, variant <b id="vk">A</b>: <span id="vname"></span></div>
+  <div class="output-line demo-frame" id="chalk"></div>
+
+  <p class="proto-note" id="vnote"></p>
+  <p class="proto-note">
+    Caption copy is a <b>placeholder</b> — its content is still fog on the map
+    (waits on this frame). Only <i>where it sits</i> is being judged here.
+  </p>
+</div>
+
+<div class="switcher">
+  <button id="prev">←</button>
+  <span class="name"><b id="vk2">A</b> — <span id="vname2"></span></span>
+  <button id="next">→</button>
+</div>
+
+<!-- the real PaceLab frame, with the two globals demos.js reaches for -->
+<script>
+  const DATA = { projects: [{ id: 'pacelab', url: 'https://github.com/hermanno3005/pacelab' }] };
+  const Term = { escHtml: s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])) };
+</script>
+<script src="../js/demos.js"></script>
+
+<script>
+/* ══ The dataset, straight from ticket #8 ══════════════════════════════════ */
+
+const EXERCISE = 'BACK SQUAT';
+const BEST_AFTER  = [145, 135, 135, 125, 125, 105, 105, 105, 90, 90, 90, 90];
+const BEST_BEFORE = [145, 135, 135, 120, 120, 105, 105, 105, 90, 90, 90, 90];
+const GHOST = [145.0, 140.5, 136.2, 132.2, 128.4, 124.9, 121.5, 118.3, 115.3, 112.4, 109.6, 107.0];
+const SEL = 5;                       /* default selection: 5 reps */
+const NEW_ENTRY = '5 × 125 kg';
+const VERDICT = 'Beats your 5-rep best by 5 kg';
+const READOUT = `best for ${SEL} reps · 4 entries ›`;
+const REPO = 'https://github.com/hermanno3005/Chalk';
+
+const VIEW_W = 868, VIEW_H = 300;
+
+/* Chart furniture greys, ported from PaceLab so the two frames sit in one
+   visual system. */
+const GRID = '#1e1e1e', TICK = '#3a3f47', MUTED = '#4b515a';
+
+const kg = w => (w % 1 ? w.toFixed(1) : String(w));
+
+/* Stepped ("step-mid") staircase: a half-unit plateau either side of every
+   rep-max, risers between. Never smoothed — SPEC §5.2. */
+function stair(vals, X, Y) {
+  let d = '';
+  vals.forEach((w, i) => {
+    const n = i + 1, half = (X(2) - X(1)) / 2;
+    const l = Math.max(X(n) - half, X(1)), r = Math.min(X(n) + half, X(12));
+    d += i === 0 ? `M${l.toFixed(1)},${Y(w).toFixed(1)}` : ` L${l.toFixed(1)},${Y(w).toFixed(1)}`;
+    d += ` L${r.toFixed(1)},${Y(w).toFixed(1)}`;
+  });
+  return d;
+}
+
+/* The ghost is a smooth continuous function, so it reads as a different *kind*
+   of line before colour or dash is considered — which is what keeps it apart
+   from the staircase at n=1, where the two touch. */
+const ghostD = (X, Y) => GHOST.map((w, i) => `${i ? 'L' : 'M'}${X(i + 1).toFixed(1)},${Y(w).toFixed(1)}`).join(' ');
+
+const DEFS = `<defs>
+  <filter id="ck-glow" x="-50%" y="-50%" width="200%" height="200%">
+    <feGaussianBlur stdDeviation="3.5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+  </filter>
+</defs>`;
+
+/* Placeholder caption — structure only (see note in the page). */
+function caption(lead) {
+  return `<div class="demo-caption">
+    <div>🏋️ <span class="green bold">Chalk</span> · ${lead}</div>
+    <div class="dim">Back Squat · entry <span class="cyan">${NEW_ENTRY}</span> · ${VERDICT}</div>
+    <div><span class="link" data-url="${REPO}">${REPO.replace(/^https?:\/\//, '')}</span></div>
+  </div>`;
+}
+
+/* ══ Variant A — readout column left, staircase right ══════════════════════
+   The app's own readout is the headline: `best for 5 reps · 4 entries ›` over
+   a giant 125 kg, with the verdict line under it. The curve is evidence
+   beside it, not the subject. Information hierarchy: number first. */
+function variantA() {
+  const P = { x0: 392, x1: 800, y0: 62, y1: 224 };
+  const TOP = 150, BOT = 85;
+  const X = n => P.x0 + (n - 1) * (P.x1 - P.x0) / 11;
+  const Y = w => P.y0 + (w - TOP) / (BOT - TOP) * (P.y1 - P.y0);
+  const L = 70;
+
+  const rows = [90, 105, 120, 135, 150].map(w => `
+    <line x1="${P.x0 - 10}" y1="${Y(w)}" x2="${P.x1 + 10}" y2="${Y(w)}" stroke="${GRID}" stroke-width="1"/>
+    <text x="${P.x0 - 18}" y="${Y(w) + 4}" fill="${TICK}" font-size="11" text-anchor="end">${kg(w)}</text>`).join('');
+  const xs = [1, 3, 5, 8, 12].map(n => `
+    <text x="${X(n)}" y="${P.y1 + 24}" fill="${MUTED}" font-size="11" text-anchor="middle">${n}</text>`).join('');
+
+  return `<svg viewBox="0 0 ${VIEW_W} ${VIEW_H}" font-family="var(--font)" aria-hidden="true">
+    ${DEFS}
+    <text x="${L}" y="72" font-size="11" letter-spacing="2" fill="${MUTED}">${EXERCISE}</text>
+
+    <text x="${L}" y="96" font-size="12" fill="${MUTED}">${READOUT}</text>
+    <text x="${L}" y="176" font-size="76" font-weight="300" letter-spacing="-2" fill="var(--heat)">125</text>
+    <text x="${L + 158}" y="176" font-size="20" fill="${TICK}">kg</text>
+    <text x="${L}" y="206" font-size="13" fill="var(--green)">${VERDICT}</text>
+    <text x="${L}" y="230" font-size="12" fill="${MUTED}">was 120 kg · entry ${NEW_ENTRY}</text>
+
+    <text x="${P.x0}" y="40" font-size="11" letter-spacing="2"><tspan fill="${MUTED}">STRENGTH CURVE · </tspan><tspan fill="var(--cyan)" opacity=".6">GHOST</tspan></text>
+    ${rows}${xs}
+    <text x="${(P.x0 + P.x1) / 2}" y="${P.y1 + 44}" fill="${MUTED}" font-size="10" letter-spacing="2" text-anchor="middle">REPS</text>
+
+    <path d="${ghostD(X, Y)}" fill="none" stroke="var(--cyan)" stroke-width="1.5" stroke-opacity=".45" stroke-dasharray="5 4"/>
+    <path d="${stair(BEST_AFTER, X, Y)}" fill="none" stroke="var(--green)" stroke-width="2.5" filter="url(#ck-glow)"/>
+    ${BEST_AFTER.map((w, i) => {
+      const n = i + 1, hit = n === 4 || n === SEL;
+      return `<circle cx="${X(n)}" cy="${Y(w)}" r="${hit ? 4.5 : 3}" fill="${hit ? 'var(--heat)' : 'var(--green)'}"/>`;
+    }).join('')}
+  </svg>` + caption(`best for 5 reps <span class="heat">125 kg</span> <span class="dim">(was 120 kg)</span>`);
+}
+
+/* ══ Variant B — PaceLab's own geometry ════════════════════════════════════
+   Full-width plot on PaceLab's exact frame: legend strip on top, plot from
+   118 to 776, the readout as an end-label off the right edge where PaceLab
+   puts `5:14 NP`. The verdict line sits under the plot as an annotation.
+   The most conservative option: the two demos become one house style. */
+function variantB() {
+  const P = { x0: 118, x1: 726, y0: 54, y1: 212 };
+  const TOP = 152, BOT = 84;
+  const X = n => P.x0 + (n - 1) * (P.x1 - P.x0) / 11;
+  const Y = w => P.y0 + (w - TOP) / (BOT - TOP) * (P.y1 - P.y0);
+
+  const rows = [90, 105, 120, 135, 150].map(w => `
+    <line x1="${P.x0 - 14}" y1="${Y(w)}" x2="${P.x1 + 14}" y2="${Y(w)}" stroke="${GRID}" stroke-width="1"/>
+    <text x="${P.x0 - 24}" y="${Y(w) + 4}" fill="${TICK}" font-size="11" text-anchor="end">${kg(w)}</text>`).join('');
+  const xs = Array.from({ length: 12 }, (_, i) => i + 1).map(n => `
+    <text x="${X(n)}" y="${P.y1 + 26}" fill="${n === SEL ? 'var(--heat)' : MUTED}" font-size="11" text-anchor="middle">${n}</text>`).join('');
+
+  return `<svg viewBox="0 0 ${VIEW_W} ${VIEW_H}" font-family="var(--font)" aria-hidden="true">
+    ${DEFS}
+    <text x="${P.x0}" y="26" font-size="11" letter-spacing="2"><tspan fill="${MUTED}">${EXERCISE} · </tspan><tspan fill="var(--green)">STRENGTH CURVE</tspan></text>
+    ${rows}${xs}
+    <text x="${P.x1}" y="${P.y1 + 46}" fill="${MUTED}" font-size="10" letter-spacing="2" text-anchor="end">REPS</text>
+
+    <path d="${ghostD(X, Y)}" fill="none" stroke="var(--cyan)" stroke-width="1.5" stroke-opacity=".4" stroke-dasharray="5 4"/>
+    <text x="${X(11)}" y="${Y(GHOST[10]) - 10}" fill="var(--cyan)" fill-opacity=".55" font-size="10" letter-spacing="1">GHOST</text>
+
+    <path d="${stair(BEST_AFTER, X, Y)}" fill="none" stroke="var(--green)" stroke-width="2.5" filter="url(#ck-glow)"/>
+    ${BEST_AFTER.map((w, i) => {
+      const n = i + 1, hit = n === 4 || n === SEL;
+      return `<circle cx="${X(n)}" cy="${Y(w)}" r="${hit ? 4.5 : 3.5}" fill="${hit ? 'var(--heat)' : 'var(--green)'}"/>`;
+    }).join('')}
+
+    <!-- the two cells the entry floored, and where they came from -->
+    <line x1="${X(4)}" y1="${Y(120)}" x2="${X(5)}" y2="${Y(120)}" stroke="${MUTED}" stroke-width="1.5" stroke-dasharray="3 3"/>
+    <text x="${X(4.5)}" y="${Y(120) + 16}" fill="${MUTED}" font-size="10" text-anchor="middle">was 120</text>
+
+    <!-- the readout, as an end-label where PaceLab puts 5:14 NP -->
+    <text x="${P.x1 + 26}" y="${Y(125) - 4}" fill="var(--heat)" font-size="16" font-weight="700">125 kg</text>
+    <text x="${P.x1 + 26}" y="${Y(125) + 13}" fill="${MUTED}" font-size="11">5 reps</text>
+
+    <text x="${P.x0}" y="${P.y1 + 62}" fill="var(--green)" font-size="13">${VERDICT}</text>
+    <text x="${P.x0}" y="${P.y1 + 80}" fill="${MUTED}" font-size="11">${READOUT}</text>
+  </svg>` + caption(`best for 5 reps <span class="heat">125 kg</span> <span class="dim">(was 120 kg)</span>`);
+}
+
+/* ══ Variant C — the verdict is the hero ═══════════════════════════════════
+   The app's own sentence at 34px across the top; the staircase below it, at
+   reduced height, as the evidence. A spotlight band marks the selected rep
+   count through the full plot height, and the old 120 sits under the new 125
+   as a hollow mark. Claim first, chart second. */
+function variantC() {
+  const P = { x0: 118, x1: 776, y0: 132, y1: 232 };
+  const TOP = 150, BOT = 86;
+  const X = n => P.x0 + (n - 1) * (P.x1 - P.x0) / 11;
+  const Y = w => P.y0 + (w - TOP) / (BOT - TOP) * (P.y1 - P.y0);
+  const half = (X(2) - X(1)) / 2;
+
+  const xs = Array.from({ length: 12 }, (_, i) => i + 1).map(n => `
+    <text x="${X(n)}" y="${P.y1 + 22}" fill="${n === SEL ? 'var(--heat)' : MUTED}" font-size="11" text-anchor="middle">${n}</text>`).join('');
+  const rows = [90, 120, 150].map(w => `
+    <line x1="${P.x0 - 12}" y1="${Y(w)}" x2="${P.x1 + 12}" y2="${Y(w)}" stroke="${GRID}" stroke-width="1"/>
+    <text x="${P.x0 - 20}" y="${Y(w) + 4}" fill="${TICK}" font-size="10" text-anchor="end">${kg(w)}</text>`).join('');
+
+  return `<svg viewBox="0 0 ${VIEW_W} ${VIEW_H}" font-family="var(--font)" aria-hidden="true">
+    ${DEFS}
+    <text x="${P.x0}" y="44" font-size="11" letter-spacing="2" fill="${MUTED}">${EXERCISE} · ENTRY <tspan fill="var(--fg)">${NEW_ENTRY}</tspan></text>
+    <text x="${P.x0}" y="88" font-size="30" font-weight="400" fill="var(--green)">${VERDICT}</text>
+    <text x="${P.x0}" y="112" font-size="12" fill="${MUTED}">${READOUT}</text>
+
+    <rect x="${X(SEL) - half}" y="${P.y0 - 14}" width="${half * 2}" height="${P.y1 - P.y0 + 14}" fill="var(--heat)" fill-opacity=".07"/>
+    ${rows}${xs}
+
+    <path d="${ghostD(X, Y)}" fill="none" stroke="var(--cyan)" stroke-width="1.5" stroke-opacity=".4" stroke-dasharray="5 4"/>
+    <path d="${stair(BEST_AFTER, X, Y)}" fill="none" stroke="var(--green)" stroke-width="2.5" filter="url(#ck-glow)"/>
+    ${BEST_AFTER.map((w, i) => {
+      const n = i + 1, hit = n === 4 || n === SEL;
+      return `<circle cx="${X(n)}" cy="${Y(w)}" r="${hit ? 4.5 : 3}" fill="${hit ? 'var(--heat)' : 'var(--green)'}"/>`;
+    }).join('')}
+    <!-- where those two cells stood before the entry -->
+    ${[4, 5].map(n => `<circle cx="${X(n)}" cy="${Y(120)}" r="3" fill="none" stroke="${MUTED}" stroke-width="1.2"/>`).join('')}
+    <text x="${X(SEL)}" y="${Y(125) - 12}" fill="var(--heat)" font-size="13" font-weight="700" text-anchor="middle">125 kg</text>
+  </svg>` + caption(`<span class="heat">125 kg</span> for 5 reps <span class="dim">(was 120 kg)</span>`);
+}
+
+/* ══ switcher ══════════════════════════════════════════════════════════════ */
+
+const VARIANTS = {
+  A: { name: 'Readout column left, curve right', render: variantA,
+       note: 'Number first. The app’s readout is the headline and the staircase is evidence beside it. Least like PaceLab; most like the app’s own screen.' },
+  B: { name: 'PaceLab geometry, full-width staircase', render: variantB,
+       note: 'The house style: same plot box, same legend strip, readout as an end-label where PaceLab puts <code>5:14 NP</code>. The two demos read as one system.' },
+  C: { name: 'Verdict is the hero', render: variantC,
+       note: 'The app’s own sentence at 30px, curve beneath as evidence, spotlight band on the selected rep count, hollow marks where 4–5 stood before.' },
+};
+
+document.getElementById('pacelab').innerHTML = PACELAB_CHART + (function () {
+  /* pacelabCaption is module-private to demos.js only by convention; it is a
+     top-level function, so it is reachable here. */
+  return pacelabCaption();
+})();
+
+function show(k) {
+  const v = VARIANTS[k] || VARIANTS.A;
+  document.getElementById('chalk').innerHTML = v.render();
+  for (const id of ['vk', 'vk2']) document.getElementById(id).textContent = k;
+  for (const id of ['vname', 'vname2']) document.getElementById(id).textContent = v.name;
+  document.getElementById('vnote').innerHTML = v.note;
+  /* file:// forbids replaceState in some browsers; the switcher must not care */
+  try { const u = new URL(location); u.searchParams.set('variant', k); history.replaceState(null, '', u); } catch {}
+}
+
+const KEYS = Object.keys(VARIANTS);
+let cur = KEYS.includes(new URL(location).searchParams.get('variant')) ? new URL(location).searchParams.get('variant') : 'A';
+const step = d => show(cur = KEYS[(KEYS.indexOf(cur) + d + KEYS.length) % KEYS.length]);
+document.getElementById('prev').onclick = () => step(-1);
+document.getElementById('next').onclick = () => step(1);
+addEventListener('keydown', e => {
+  if (/^(INPUT|TEXTAREA)$/.test(e.target.tagName) || e.target.isContentEditable) return;
+  if (e.key === 'ArrowLeft') step(-1);
+  if (e.key === 'ArrowRight') step(1);
+});
+show(cur);
+</script>
+</body>
+</html>
