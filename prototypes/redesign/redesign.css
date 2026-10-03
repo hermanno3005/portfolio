@@ -1,0 +1,828 @@
+/* ══════════════════════════════════════════════════════════════════════════
+   PROTOTYPE: throwaway, not production CSS.
+
+   Question: what does a graphical overhaul look like that pulls the whole
+   site — window, terminal, demos, closed screen, easter egg, mobile card —
+   into one visual system, without changing a single behaviour?
+
+   Plan: three variants of the site's look, plus the current site as a
+   baseline, switchable via `?variant=` on the existing index.html route.
+   Every variant is CSS over the *same* DOM, plus a little decorative chrome
+   that switcher.js injects and that only ever reads terminal state.
+
+   Everything here is scoped under `html[data-variant]`, which switcher.js sets
+   on localhost only. Without that attribute this file matches nothing but the
+   prototype's own switcher bar.
+
+   What the current site is missing, and every variant fixes the same way:
+   there is no neutral ramp. With only `--bg` and `--dim` to draw from, every
+   surface invented its own greys (#000, #1a1a1a, #161616, #131313, #222, #262,
+   #333, #444 in style.css; #1e1e1e, #3a3f47, #4b515a and six chip tints in the
+   demos), and the title bar runs a second accent palette parallel to the
+   terminal's. Each variant below defines one token set — surfaces, hairlines,
+   ink, four semantic accents, chart furniture — and every surface draws from
+   it, the window controls included.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+
+/* ── Shared: the demos speak the palette ─────────────────────────────────────
+   The demo SVGs hard-code their furniture greys and chip tints as presentation
+   attributes. A CSS declaration beats a presentation attribute, so they are
+   re-pointed at tokens here without touching js/demos/. (If a variant wins,
+   the real fix is to make them tokens at the source.) Keyframes still beat
+   these rules, so every animated fill keeps its timing. */
+html[data-variant] .demo-frame [stroke="#1e1e1e"] { stroke: var(--chart-grid); }
+html[data-variant] .demo-frame [fill="#3a3f47"]   { fill: var(--chart-tick); }
+html[data-variant] .demo-frame [fill="#4b515a"]   { fill: var(--chart-muted); }
+html[data-variant] .demo-frame [stroke="#4b515a"] { stroke: var(--chart-muted); }
+html[data-variant] .demo-frame [fill="#0f1620"]   { fill: var(--tint-cyan); }
+html[data-variant] .demo-frame [stroke="#1e2b38"] { stroke: var(--tint-cyan-line); }
+html[data-variant] .demo-frame [fill="#1d1409"]   { fill: var(--tint-heat); }
+html[data-variant] .demo-frame [stroke="#3a2a12"] { stroke: var(--tint-heat-line); }
+html[data-variant] .demo-frame [fill="#101010"]   { fill: var(--tint-none); }
+html[data-variant] .demo-frame [stroke="#232323"] { stroke: var(--tint-none-line); }
+
+/* The charts' viewBox is the content width of the old 900px window, and the
+   frame's reserved height assumes it never draws larger than 1:1. Two of the
+   variants have a wider column, so the cap is stated outright. */
+html[data-variant] .demo-frame svg { max-width: 868px; }
+
+/* Links: same semantics (cyan goes somewhere, green runs something), quieter
+   underline. Static, no hover — the site's rule for anything in the output. */
+html[data-variant] .link,
+html[data-variant] .run-link {
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+  text-decoration-color: color-mix(in oklab, currentColor 55%, transparent);
+}
+
+/* A bug the current site has, fixed here because it is purely visual: the
+   prompt's trailing space is a whitespace-only text node inside a flex row,
+   which flex layout drops — so every echoed command reads `~$projects` and the
+   cursor sits flush against the `$`. One character of margin puts it back. */
+html[data-variant] .prompt-echo > span:last-child,
+html[data-variant] #input-wrapper { margin-left: 1ch; }
+
+html[data-variant] #terminal { scrollbar-color: var(--line-strong) transparent; }
+html[data-variant] #terminal::-webkit-scrollbar-thumb { background: var(--line-strong); }
+
+html[data-variant] #closed-screen .closed-msg       { color: var(--dim); }
+html[data-variant] #closed-screen .closed-msg span  { color: var(--red); }
+html[data-variant] #closed-screen .closed-msg span[style] { color: var(--dim) !important; opacity: .6; }
+html[data-variant] #closed-screen .closed-hint      { color: var(--dim); opacity: .7; }
+
+html[data-variant] #eggoverlay,
+html[data-variant] #egglog { background: var(--page); }
+
+/* Decorative chrome that switcher.js injects for some variants: hidden unless
+   its own variant asks for it. */
+.proto-tmux, #proto-sheet, .proto-tb { display: none; }
+
+
+/* ══════════════════════════════════════════════════════════════════════════
+   A — Native window
+
+   The evolution. The same floating Ghostty window, made to belong to its page.
+   One graphite palette that the chrome, the terminal, the charts and the card
+   all draw from. The title bar is the terminal's own surface, like Ghostty's
+   transparent titlebar, rather than a second grey. The traffic lights take the
+   palette's red, amber and green instead of a parallel chrome palette. The
+   window grows with the viewport's height; its width stays where the demos
+   draw 1:1. The desktop behind it is lit, faintly, by the same four accents.
+   ══════════════════════════════════════════════════════════════════════════ */
+html[data-variant="A"] {
+  --page:        #0a0b0e;
+  --bg:          #111317;
+  --bg-title:    #111317;
+  --fg:          #d9dce2;
+  --dim:         #7c838e;
+  --green:       #77dd9f;
+  --cyan:        #74c3ee;
+  --heat:        #f0b26b;
+  --red:         #ef736d;
+  --cursor:      #e9e4da;
+  --selection:   #2a3442;
+  --line:        #1f2228;
+  --line-strong: #2d3139;
+  --panel:       #16181d;
+  --panel-line:  #25282f;
+  --chart-grid:  #1b1d22;
+  --chart-tick:  #3d424b;
+  --chart-muted: #59606b;
+  --tint-cyan: #0f1a23;  --tint-cyan-line: #1f3445;
+  --tint-heat: #1d160d;  --tint-heat-line: #3c2c17;
+  --tint-none: #131418;  --tint-none-line: #272a30;
+
+  --wallpaper:
+    radial-gradient(circle at 1px 1px, rgb(255 255 255 / .035) 1px, transparent 1.6px) 0 0 / 22px 22px,
+    radial-gradient(70% 55% at 10% 0%,   color-mix(in oklab, var(--green) 11%, transparent), transparent 70%),
+    radial-gradient(55% 60% at 100% 30%, color-mix(in oklab, var(--cyan)  10%, transparent), transparent 70%),
+    radial-gradient(70% 50% at 45% 105%, color-mix(in oklab, var(--heat)   8%, transparent), transparent 70%),
+    var(--page);
+
+  background: var(--page);
+  -webkit-font-smoothing: antialiased;
+}
+html[data-variant="A"]      { background: var(--wallpaper); }
+html[data-variant="A"] body { background: none; }
+
+html[data-variant="A"] #window {
+  width:  min(920px, calc(100vw - 48px));
+  height: min(820px, calc(100vh - 120px));
+  border-radius: 12px;
+  background: var(--bg);
+  box-shadow:
+    0 0 0 1px rgb(255 255 255 / .07),
+    0 50px 120px -30px rgb(0 0 0 / .9),
+    0 18px 40px -12px rgb(0 0 0 / .6);
+}
+
+/* One surface: the bar is the terminal's own background, separated by a
+   hairline rather than by a second shade of grey. */
+html[data-variant="A"] #titlebar {
+  height: 40px;
+  padding: 0 16px;
+  background: var(--bg-title);
+  border-bottom: 1px solid var(--line);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / .04);
+}
+html[data-variant="A"] .dot        { box-shadow: inset 0 0 0 .5px rgb(0 0 0 / .35); }
+html[data-variant="A"] .dot.red    { background: var(--red); }
+html[data-variant="A"] .dot.yellow { background: var(--heat); }
+html[data-variant="A"] .dot.green  { background: var(--green); }
+/* The title centres on the window, not on what is left after the lights. */
+html[data-variant="A"] #window-title { font-size: 12px; letter-spacing: .02em; margin-right: 64px; }
+
+/* 920 − 2 × 26 = 868: the demos' own viewBox, so they still draw 1:1. */
+html[data-variant="A"] #terminal { padding: 16px 26px 18px; background: var(--bg); }
+
+html[data-variant="A"] #window.minimized { height: auto; }
+
+html[data-variant="A"] #closed-screen { background: var(--wallpaper); }
+
+@media (max-width: 600px) {
+  html[data-variant="A"] #window { width: 100vw; height: 100vh; border-radius: 0; }
+  html[data-variant="A"] #terminal { padding: 12px 16px; }
+}
+
+/* A — the card: the terminal window, shrunk to a phone. Section labels become
+   the commands that print each section, so the card reads as a transcript of
+   the session the desktop visitor gets. Colour is spent on meaning only:
+   green for the primary action, cyan for what leaves the page. */
+html[data-variant="A"] #mobile-card {
+  background: var(--bg);
+  color: var(--fg);
+  padding: 0 0 calc(env(safe-area-inset-bottom, 0px) + 36px);
+}
+html[data-variant="A"] #mobile-card::before {
+  content: 'hermann@portfolio — zsh';
+  display: block;
+  height: 44px;
+  line-height: 44px;
+  margin-bottom: 28px;
+  text-align: center;
+  font-size: 12px;
+  color: var(--dim);
+  border-bottom: 1px solid var(--line);
+  background:
+    radial-gradient(circle at 22px 50%, var(--red)   0 5.5px, transparent 6.5px),
+    radial-gradient(circle at 42px 50%, var(--heat)  0 5.5px, transparent 6.5px),
+    radial-gradient(circle at 62px 50%, var(--green) 0 5.5px, transparent 6.5px);
+}
+html[data-variant="A"] .mc-inner  { padding: 0 20px; }
+html[data-variant="A"] .mc-prompt { color: var(--dim); font-size: 13px; margin-bottom: 14px; }
+html[data-variant="A"] .mc-name   { color: var(--fg); font-size: 28px; letter-spacing: -.01em; }
+html[data-variant="A"] .mc-role   { color: var(--dim); font-size: 14px; margin-top: 6px; }
+html[data-variant="A"] .mc-bio    { color: var(--fg); opacity: .85; font-size: 14px; }
+
+html[data-variant="A"] .mc-label          { font-size: 0; margin: 32px 0 12px; }
+html[data-variant="A"] .mc-label::before  { content: '$ '; font-size: 13px; color: var(--dim); }
+html[data-variant="A"] .mc-label::after   { font-size: 13px; color: var(--green); }
+html[data-variant="A"] .mc-bio + .mc-label::after       { content: 'open cv'; }
+html[data-variant="A"] #mc-projects .mc-label::after    { content: 'projects'; }
+html[data-variant="A"] #mc-projects + .mc-label::after  { content: 'contact'; }
+
+html[data-variant="A"] .mc-btn {
+  background: var(--panel);
+  border: 1px solid var(--panel-line);
+  border-radius: 10px;
+  color: var(--cyan);
+}
+html[data-variant="A"] .mc-btn:active { background: var(--line); }
+html[data-variant="A"] .mc-primary {
+  background: color-mix(in oklab, var(--green) 10%, var(--panel));
+  border-color: color-mix(in oklab, var(--green) 40%, transparent);
+  color: var(--green);
+}
+html[data-variant="A"] .mc-proj        { background: var(--panel); border: 1px solid var(--panel-line); border-radius: 10px; color: var(--fg); }
+html[data-variant="A"] .mc-proj:active { background: var(--line); }
+html[data-variant="A"] .mc-proj-name   { color: var(--green); }
+html[data-variant="A"] .mc-proj-stack  { color: var(--dim); opacity: 1; }
+html[data-variant="A"] .mc-proj-line   { color: var(--dim); }
+html[data-variant="A"] .mc-footer      { color: var(--dim); border-top: 1px solid var(--line); padding-top: 22px; margin-top: 32px; }
+
+
+/* ══════════════════════════════════════════════════════════════════════════
+   B — Workstation
+
+   The window dissolves: the terminal *is* the page, full-bleed, the way it is
+   on a machine someone works on. A tmux status line along the bottom carries
+   what a real one would — session, the foreground process (it renames itself
+   to `pacelab` or `chalk` while a demo holds the terminal, and the session
+   badge turns amber), cwd, language, clock — all read from the terminal's own
+   state, never written to it. The window controls survive as three small
+   squares in the top strip that colour on hover. Text runs in a centred
+   measure, so a wide screen doesn't turn the about text into one line.
+   ══════════════════════════════════════════════════════════════════════════ */
+html[data-variant="B"] {
+  --page:        #0b0e13;
+  --bg:          #0b0e13;
+  --bg-title:    #0b0e13;
+  --bar:         #121822;
+  --bar-2:       #1a2230;
+  --fg:          #d2d8e2;
+  --dim:         #7b8698;
+  --green:       #8fd897;
+  --cyan:        #7cc3ec;
+  --heat:        #f3b46f;
+  --red:         #f07a7a;
+  --cursor:      #d2d8e2;
+  --selection:   #22314a;
+  --line:        #18202b;
+  --line-strong: #263041;
+  --panel:       #10151d;
+  --panel-line:  #1d2531;
+  --chart-grid:  #151b25;
+  --chart-tick:  #354052;
+  --chart-muted: #4f5b6f;
+  --tint-cyan: #0d1822;  --tint-cyan-line: #1c3247;
+  --tint-heat: #1b150e;  --tint-heat-line: #3a2c19;
+  --tint-none: #0f131a;  --tint-none-line: #222a36;
+  --measure: 940px;
+
+  background: var(--page);
+  -webkit-font-smoothing: antialiased;
+}
+html[data-variant="B"] body { background: none; }
+
+html[data-variant="B"] #window {
+  width: 100vw;
+  height: 100vh;
+  border-radius: 0;
+  box-shadow: none;
+  background: var(--bg);
+}
+
+html[data-variant="B"] #window.minimized { height: auto; }
+
+html[data-variant="B"] #titlebar {
+  height: 30px;
+  padding: 0 14px;
+  gap: 14px;
+  background: var(--bg);
+  border-bottom: 1px solid var(--line);
+}
+html[data-variant="B"] #traffic-lights { gap: 6px; }
+html[data-variant="B"] .dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  background: var(--bar-2);
+  box-shadow: inset 0 0 0 1px var(--line-strong);
+}
+html[data-variant="B"] #traffic-lights:hover .dot.red    { background: var(--red); }
+html[data-variant="B"] #traffic-lights:hover .dot.yellow { background: var(--heat); }
+html[data-variant="B"] #traffic-lights:hover .dot.green  { background: var(--green); }
+html[data-variant="B"] .dot::after { font-size: 8px; }
+html[data-variant="B"] #window-title { text-align: left; font-size: 12px; color: var(--dim); }
+
+html[data-variant="B"] #terminal {
+  padding: 24px max(24px, calc((100% - var(--measure)) / 2)) 18px;
+}
+
+html[data-variant="B"] .proto-tmux {
+  display: flex;
+  flex-shrink: 0;
+  height: 26px;
+  line-height: 26px;
+  font-size: 12px;
+  color: var(--dim);
+  background: var(--bar);
+  border-top: 1px solid var(--line);
+  white-space: nowrap;
+  overflow: hidden;
+  user-select: none;
+}
+html[data-variant="B"] .tm-session { padding: 0 12px; background: var(--green); color: var(--bg); font-weight: 700; }
+html[data-variant="B"] .tm-win     { padding: 0 12px; background: var(--bar-2); color: var(--fg); }
+html[data-variant="B"] .tm-fill    { flex: 1; }
+html[data-variant="B"] .tm-seg     { padding: 0 12px; border-left: 1px solid var(--line-strong); }
+html[data-variant="B"] .tm-cwd     { color: var(--cyan); }
+html[data-variant="B"] .tm-host    { color: var(--fg); }
+/* A foreground process holds the terminal: the session badge says so. */
+html[data-variant="B"] #terminal.term-busy ~ .proto-tmux .tm-session { background: var(--heat); }
+
+html[data-variant="B"] #closed-screen {
+  background: var(--page);
+  align-items: flex-start;
+  justify-content: flex-start;
+  padding: 54px max(24px, calc((100vw - var(--measure)) / 2));
+  gap: 4px;
+}
+html[data-variant="B"] #closed-screen .closed-msg { text-align: left; line-height: 1.6; font-size: 14px; color: var(--fg); }
+html[data-variant="B"] #closed-screen .closed-msg::before { content: '[exited]'; display: block; color: var(--dim); }
+html[data-variant="B"] #closed-screen .closed-hint { font-size: 12px; }
+
+@media (max-width: 600px) {
+  html[data-variant="B"] .tm-clock,
+  html[data-variant="B"] .tm-host { display: none; }
+  html[data-variant="B"] #terminal { padding: 16px 14px; }
+}
+
+/* B — the card: the same session on a phone. A plain list rather than boxed
+   buttons — rows divided by hairlines, sections headed by a label and a rule,
+   and the tmux line pinned to the bottom of the screen. */
+html[data-variant="B"] #mobile-card {
+  background: var(--bg);
+  color: var(--fg);
+  padding: 0;
+}
+html[data-variant="B"] #mobile-card::before {
+  content: 'hermann@portfolio — zsh';
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: block;
+  height: 34px;
+  line-height: 34px;
+  padding: 0 16px;
+  font-size: 12px;
+  color: var(--dim);
+  background: var(--bg);
+  border-bottom: 1px solid var(--line);
+}
+html[data-variant="B"] .mc-inner  { padding: 26px 18px 30px; }
+html[data-variant="B"] .mc-prompt { color: var(--dim); font-size: 13px; margin-bottom: 12px; }
+html[data-variant="B"] .mc-name   { color: var(--fg); font-size: 26px; }
+html[data-variant="B"] .mc-role   { color: var(--cyan); font-size: 14px; margin-top: 4px; }
+html[data-variant="B"] .mc-bio    { color: var(--fg); opacity: .8; font-size: 13.5px; }
+
+html[data-variant="B"] .mc-label {
+  display: flex;
+  align-items: center;
+  font-size: 0;
+  margin: 34px 0 2px;
+}
+html[data-variant="B"] .mc-label::before { font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: var(--dim); }
+html[data-variant="B"] .mc-label::after  { content: ''; flex: 1; margin-left: 10px; border-top: 1px solid var(--line-strong); }
+html[data-variant="B"] .mc-bio + .mc-label::before      { content: 'cv'; }
+html[data-variant="B"] #mc-projects .mc-label::before   { content: 'projects'; }
+html[data-variant="B"] #mc-projects + .mc-label::before { content: 'links'; }
+
+html[data-variant="B"] .mc-btn,
+html[data-variant="B"] .mc-proj {
+  margin: 0;
+  padding: 15px 2px;
+  background: none;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  border-radius: 0;
+}
+html[data-variant="B"] .mc-btn        { color: var(--cyan); }
+html[data-variant="B"] .mc-primary    { color: var(--green); }
+html[data-variant="B"] .mc-primary::after { content: '↓'; margin-left: auto; color: var(--dim); }
+html[data-variant="B"] .mc-btn:active,
+html[data-variant="B"] .mc-proj:active { background: var(--panel); }
+html[data-variant="B"] .mc-proj-name  { color: var(--green); }
+html[data-variant="B"] .mc-proj-stack { color: var(--dim); opacity: 1; }
+html[data-variant="B"] .mc-proj-line  { color: var(--dim); }
+html[data-variant="B"] .mc-footer     { color: var(--dim); text-align: left; margin-top: 28px; }
+
+html[data-variant="B"] #proto-tmux-card { position: sticky; bottom: 0; }
+
+
+/* ══════════════════════════════════════════════════════════════════════════
+   C — Drawing sheet
+
+   The wildcard. The page is a technical drawing — trim line, zone grid, a
+   framed drawing area and a title block in the corner — and the terminal is
+   the view drawn on it. It takes the one thing a terminal can't say, that this
+   is a Dipl.-Ing. in mechanical engineering who moved into software, and makes
+   it the frame. Ink on paper: the four accents become ink colours, all at
+   AA contrast on the sheet. The window controls are boxes in the title block,
+   and minimising folds the sheet down to its title block, the way a folded
+   drawing keeps the title block on top.
+   ══════════════════════════════════════════════════════════════════════════ */
+html[data-variant="C"] {
+  --page:        #f3f0e7;
+  --bg:          #f3f0e7;
+  --bg-title:    #f3f0e7;
+  --ink:         #1b2230;
+  --fg:          #1b2230;
+  --dim:         #5f6470;
+  --green:       #1d7346;
+  --cyan:        #1c5aa6;
+  --heat:        #a9500e;
+  --red:         #b3261e;
+  --cursor:      #1b2230;
+  --selection:   #cfdcee;
+  --line:        #d9d3c4;
+  --line-strong: #b9b2a1;
+  --panel:       #ebe7dc;
+  --panel-line:  #cfc8b7;
+  --chart-grid:  #e1dbcc;
+  --chart-tick:  #8b8f97;
+  --chart-muted: #8a8f98;
+  --tint-cyan: #e4ebf4;  --tint-cyan-line: #b6c7dd;
+  --tint-heat: #f4e6d6;  --tint-heat-line: #dcbd9b;
+  --tint-none: #ece8df;  --tint-none-line: #c6c0b2;
+  --measure: 940px;
+  --trim:  10px;   /* sheet edge → trim line */
+  --frame: 30px;   /* sheet edge → drawing frame; the zone strip lies between */
+
+  --paper:
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .1  0 0 0 0 .1  0 0 0 0 .12  0 0 0 .045 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>"),
+    var(--page);
+
+  color-scheme: light;
+  background: var(--page);
+}
+html[data-variant="C"]      { background: var(--paper); }
+html[data-variant="C"] body { background: none; }
+
+/* Trim line and zone strip. */
+html[data-variant="C"] #proto-sheet {
+  display: block;
+  position: fixed;
+  inset: var(--trim);
+  border: 1px solid var(--ink);
+  pointer-events: none;
+  color: var(--ink);
+  font-size: 10px;
+}
+html[data-variant="C"] #proto-sheet .zs { position: absolute; display: flex; }
+html[data-variant="C"] #proto-sheet .zs span { flex: 1; display: grid; place-items: center; }
+html[data-variant="C"] #proto-sheet .zs-top,
+html[data-variant="C"] #proto-sheet .zs-bottom { left: calc(var(--frame) - var(--trim)); right: calc(var(--frame) - var(--trim)); height: calc(var(--frame) - var(--trim)); }
+html[data-variant="C"] #proto-sheet .zs-top    { top: 0; }
+html[data-variant="C"] #proto-sheet .zs-bottom { bottom: 0; }
+html[data-variant="C"] #proto-sheet .zs-left,
+html[data-variant="C"] #proto-sheet .zs-right  { top: calc(var(--frame) - var(--trim)); bottom: calc(var(--frame) - var(--trim)); width: calc(var(--frame) - var(--trim)); flex-direction: column; }
+html[data-variant="C"] #proto-sheet .zs-left   { left: 0; }
+html[data-variant="C"] #proto-sheet .zs-right  { right: 0; }
+html[data-variant="C"] #proto-sheet .zs-top span + span,
+html[data-variant="C"] #proto-sheet .zs-bottom span + span { border-left: 1px solid var(--ink); }
+html[data-variant="C"] #proto-sheet .zs-left span + span,
+html[data-variant="C"] #proto-sheet .zs-right span + span  { border-top: 1px solid var(--ink); }
+
+/* The drawing frame. */
+html[data-variant="C"] #window,
+html[data-variant="C"] #window.fullscreen {
+  position: fixed;
+  inset: var(--frame);
+  width: auto !important;
+  height: auto !important;
+  border: 2px solid var(--ink);
+  border-radius: 0;
+  box-shadow: none;
+  background: var(--paper);
+  z-index: 1;
+}
+
+html[data-variant="C"] #terminal {
+  padding: 22px max(28px, calc((100% - var(--measure)) / 2)) 14px;
+  background: transparent;
+}
+
+/* The title bar becomes the title block: moved under the drawing area, its
+   right-hand cells boxed in ink, with a notes field to its left. */
+html[data-variant="C"] #titlebar {
+  order: 2;
+  display: grid;
+  grid-template-columns: 1fr 46px minmax(200px, 290px) 150px 120px;
+  grid-template-rows: repeat(3, 32px);
+  align-items: stretch;   /* the bar's own `center` would shrink every cell to its text */
+  grid-template-areas:
+    "notes ctl   name  date  sheet"
+    "notes ctl   role  lang  scale"
+    "notes ctl   title view  view";
+  height: auto;
+  padding: 0;
+  gap: 0;
+  background: none;
+  border: 0;
+  color: var(--ink);
+  user-select: none;
+}
+/* The block's own heavy outline, drawn by a grid item laid over its cells. */
+html[data-variant="C"] #titlebar::before {
+  content: '';
+  grid-column: 2 / -1;
+  grid-row: 1 / -1;
+  border-top: 2px solid var(--ink);
+  border-left: 2px solid var(--ink);
+  pointer-events: none;
+}
+html[data-variant="C"] #titlebar > * { min-width: 0; }
+html[data-variant="C"] .proto-tb,
+html[data-variant="C"] #window-title {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 0 9px;
+  border-top: 1px solid var(--ink);
+  border-left: 1px solid var(--ink);
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+html[data-variant="C"] .proto-tb small,
+html[data-variant="C"] #window-title::before {
+  display: block;
+  font-size: 8px;
+  line-height: 1.3;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--dim);
+}
+html[data-variant="C"] .proto-tb span { font-size: 12px; line-height: 1.35; overflow: hidden; text-overflow: ellipsis; }
+html[data-variant="C"] .tb-name   { grid-area: name; }
+html[data-variant="C"] .tb-name span { font-weight: 700; font-size: 13px; letter-spacing: .02em; }
+html[data-variant="C"] .tb-role   { grid-area: role; }
+html[data-variant="C"] .tb-date   { grid-area: date; }
+html[data-variant="C"] .tb-lang   { grid-area: lang; }
+html[data-variant="C"] .tb-sheet  { grid-area: sheet; }
+html[data-variant="C"] .tb-scale  { grid-area: scale; }
+html[data-variant="C"] .tb-view   { grid-area: view; }
+html[data-variant="C"] .tb-view span { color: var(--cyan); }
+html[data-variant="C"] .tb-notes  {
+  grid-area: notes;
+  border: 0;
+  justify-content: flex-end;
+  padding: 0 0 8px max(28px, calc((100% - var(--measure)) / 2));
+}
+html[data-variant="C"] .tb-notes span { color: var(--dim); font-size: 11px; }
+html[data-variant="C"] #window-title {
+  grid-area: title;
+  flex: none;
+  text-align: left;
+  font-size: 12px;
+  color: var(--ink);
+}
+html[data-variant="C"] #window-title::before { content: 'Zeichnung / Drawing'; }
+
+html[data-variant="C"] #traffic-lights {
+  grid-area: ctl;
+  flex-direction: column;
+  justify-content: center;
+  gap: 7px;
+  border-top: 1px solid var(--ink);
+  border-left: 1px solid var(--ink);
+}
+html[data-variant="C"] .dot {
+  width: 18px;
+  height: 18px;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: inset 0 0 0 1px var(--ink);
+}
+/* Glyphs always shown: there is no hover on paper, or on a tablet. */
+html[data-variant="C"] .dot::after   { opacity: 1; color: var(--ink); font-family: var(--font); font-weight: 500; font-size: 11px; }
+html[data-variant="C"] .dot.red::after    { content: '✕'; }
+html[data-variant="C"] .dot.yellow::after { content: '−'; }
+html[data-variant="C"] .dot.green::after  { content: '+'; }
+html[data-variant="C"] .dot.red:hover    { background: var(--red); }
+html[data-variant="C"] .dot.yellow:hover { background: var(--heat); }
+html[data-variant="C"] .dot.green:hover  { background: var(--green); }
+html[data-variant="C"] .dot:hover::after { color: var(--bg); }
+
+/* Folded: only the title block stays on top. */
+html[data-variant="C"] #window.minimized {
+  inset: auto var(--frame) var(--frame) auto;
+  width: min(606px, calc(100vw - 2 * var(--frame))) !important;
+  border-width: 0;
+  background: none;
+}
+html[data-variant="C"] #window.minimized #titlebar { grid-template-columns: 0 46px minmax(200px, 290px) 150px 120px; background: var(--paper); }
+html[data-variant="C"] #window.minimized .tb-notes { display: none; }
+
+/* No glow on paper: it reads as a smudge, not as light. */
+html[data-variant="C"] .demo-frame [filter] { filter: none; }
+
+html[data-variant="C"] #closed-screen { background: var(--paper); }
+html[data-variant="C"] #closed-screen .closed-msg {
+  position: relative;
+  padding: 26px 44px;
+  border: 1.5px solid var(--ink);
+  color: var(--fg);
+}
+html[data-variant="C"] #closed-screen .closed-msg::after {
+  content: 'GESCHLOSSEN · CLOSED';
+  position: absolute;
+  top: -16px;
+  right: -36px;
+  padding: 3px 10px;
+  border: 2px solid var(--red);
+  color: var(--red);
+  background: var(--page);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .14em;
+  line-height: 1.4;
+  transform: rotate(-7deg);
+}
+html[data-variant="C"] #closed-screen .closed-hint { color: var(--dim); }
+html[data-variant="C"] #eggoverlay,
+html[data-variant="C"] #egglog { background: var(--paper); }
+
+@media (max-width: 900px) {
+  html[data-variant="C"] { --trim: 6px; --frame: 12px; }
+  html[data-variant="C"] #proto-sheet .zs { display: none; }
+  html[data-variant="C"] #titlebar {
+    grid-template-columns: 46px 1fr 96px;
+    grid-template-areas:
+      "ctl name  lang"
+      "ctl role  lang"
+      "ctl view  view";
+  }
+  html[data-variant="C"] .tb-notes,
+  html[data-variant="C"] .tb-date,
+  html[data-variant="C"] .tb-sheet,
+  html[data-variant="C"] .tb-scale,
+  html[data-variant="C"] #window-title { display: none; }
+  html[data-variant="C"] #titlebar::before { grid-column: 1 / -1; }
+  html[data-variant="C"] #terminal { padding: 14px 14px 10px; }
+}
+
+/* C — the card: a parts list. The identity is the head of the sheet; every
+   row below it is a numbered position, CV first, then projects, then links. */
+html[data-variant="C"] #mobile-card {
+  background: var(--paper);
+  color: var(--fg);
+  padding: 14px 12px calc(env(safe-area-inset-bottom, 0px) + 22px);
+}
+html[data-variant="C"] .mc-inner {
+  border: 2px solid var(--ink);
+  counter-reset: pos;
+}
+html[data-variant="C"] .mc-prompt {
+  margin: 0;
+  padding: 6px 10px;
+  font-size: 11px;
+  color: var(--dim);
+  border-bottom: 1px solid var(--ink);
+}
+html[data-variant="C"] .mc-name { padding: 12px 10px 0; color: var(--ink); font-size: 24px; }
+html[data-variant="C"] .mc-name::before,
+html[data-variant="C"] .mc-role::before {
+  display: block;
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--dim);
+}
+html[data-variant="C"] .mc-name::before { content: 'Name'; margin-bottom: 2px; }
+html[data-variant="C"] .mc-role { margin: 0; padding: 10px 10px 12px; color: var(--ink); font-size: 13px; border-bottom: 1px solid var(--ink); }
+html[data-variant="C"] .mc-role::before { content: 'Benennung / Title'; margin-bottom: 2px; }
+html[data-variant="C"] .mc-bio  { margin: 0; padding: 12px 10px; color: var(--fg); font-size: 13px; opacity: 1; border-bottom: 1px solid var(--ink); }
+
+/* Flex, not grid: the label's own text is still in there at font-size 0, and
+   as a grid item it would take a whole cell. */
+html[data-variant="C"] .mc-label {
+  display: flex;
+  margin: 0;
+  font-size: 0;
+  background: var(--panel);
+  border-bottom: 1px solid var(--ink);
+}
+html[data-variant="C"] .mc-label::before,
+html[data-variant="C"] .mc-label::after {
+  padding: 6px 9px;
+  font-size: 9px;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--ink);
+}
+html[data-variant="C"] .mc-label::before { content: 'Pos.'; flex: 0 0 44px; border-right: 1px solid var(--ink); text-align: center; padding: 6px 0; }
+html[data-variant="C"] .mc-bio + .mc-label::after       { content: 'Lebenslauf / CV'; }
+html[data-variant="C"] #mc-projects .mc-label::after    { content: 'Projekte / Projects'; }
+html[data-variant="C"] #mc-projects + .mc-label::after  { content: 'Links'; }
+
+html[data-variant="C"] .mc-btn,
+html[data-variant="C"] .mc-proj {
+  display: grid;
+  grid-template-columns: 44px 1fr auto;
+  align-items: center;
+  column-gap: 10px;
+  min-height: 48px;
+  margin: 0;
+  padding: 0 12px 0 0;
+  background: none;
+  border: 0;
+  border-bottom: 1px solid var(--line-strong);
+  border-radius: 0;
+  color: var(--cyan);
+  font-size: 14px;
+}
+html[data-variant="C"] .mc-btn::before,
+html[data-variant="C"] .mc-proj::before {
+  content: counter(pos, decimal-leading-zero);
+  counter-increment: pos;
+  align-self: stretch;
+  display: grid;
+  place-items: center;
+  font-size: 11px;
+  color: var(--dim);
+  border-right: 1px solid var(--ink);
+}
+html[data-variant="C"] .mc-primary { color: var(--green); font-weight: 600; }
+html[data-variant="C"] .mc-primary::after { content: '↓'; color: var(--dim); font-weight: 400; }
+html[data-variant="C"] .mc-btn:active,
+html[data-variant="C"] .mc-proj:active { background: var(--panel); }
+html[data-variant="C"] .mc-proj        { padding-top: 9px; padding-bottom: 9px; color: var(--fg); }
+html[data-variant="C"] .mc-proj-name   { color: var(--green); font-weight: 600; }
+html[data-variant="C"] .mc-proj-stack  { color: var(--dim); opacity: 1; }
+html[data-variant="C"] .mc-proj-line   { color: var(--dim); }
+html[data-variant="C"] .mc-footer {
+  margin: 0;
+  padding: 10px;
+  text-align: left;
+  font-size: 11px;
+  color: var(--dim);
+}
+html[data-variant="C"] .mc-footer::before { content: 'Hinweis / Note — '; letter-spacing: .06em; }
+
+
+/* ══════════════════════════════════════════════════════════════════════════
+   Prototype tooling — not part of any design being evaluated.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* Phone preview: switcher.js flips the site's own touch-device media queries
+   on, so the card renders through exactly the rules a phone would use, then
+   frames it at 390 × 844 on a neutral desk. */
+html.proto-card, html.proto-card body { background: #2c2c30 !important; }
+html.proto-card #mobile-card {
+  width: 390px !important;
+  min-height: 844px;
+  margin: 40px auto 120px;
+  border-radius: 40px;
+  overflow: clip;
+  box-shadow: 0 0 0 11px #0e0e10, 0 0 0 12px #5a5a60, 0 40px 100px rgb(0 0 0 / .5);
+}
+
+#proto-switcher {
+  position: fixed;
+  left: 50%;
+  bottom: 14px;
+  z-index: 20000;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 4px;
+  border-radius: 999px;
+  background: #161618;
+  color: #f4f4f5;
+  font: 500 12px/1 ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  box-shadow: 0 0 0 1px rgb(255 255 255 / .16), 0 10px 30px rgb(0 0 0 / .45);
+  opacity: .72;
+  transition: opacity .15s;
+  user-select: none;
+  white-space: nowrap;
+}
+#proto-switcher:hover { opacity: 1; }
+#proto-switcher.ps-hidden { display: none; }
+#proto-switcher button {
+  all: unset;
+  cursor: pointer;
+  padding: 7px 10px;
+  border-radius: 999px;
+}
+#proto-switcher button:hover { background: rgb(255 255 255 / .1); }
+#proto-switcher button:focus-visible { outline: 2px solid #ff3ea5; }
+#proto-switcher button[aria-pressed="true"] { background: rgb(255 255 255 / .18); }
+#proto-switcher .ps-tag {
+  padding: 5px 8px;
+  margin-right: 2px;
+  border-radius: 999px;
+  background: #ff3ea5;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .06em;
+}
+#proto-switcher .ps-label { min-width: 178px; text-align: center; font-weight: 600; }
+#proto-switcher .ps-sep   { width: 1px; height: 16px; margin: 0 4px; background: rgb(255 255 255 / .18); }
+/* B and C have empty chrome along the top-right; the bar sits there instead of
+   over their input line and title block. Not in phone preview, where it would
+   sit over the card. */
+html[data-variant="B"]:not(.proto-card) #proto-switcher,
+html[data-variant="C"]:not(.proto-card) #proto-switcher {
+  top: 1px;
+  bottom: auto;
+  left: auto;
+  right: 12px;
+  transform: scale(.85);
+  transform-origin: top right;
+}

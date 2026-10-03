@@ -5,7 +5,8 @@
   "description": "Terminal-style portfolio — a fake zsh session in the browser. The site itself has no build step and no runtime dependencies; everything here is test tooling only.",
   "scripts": {
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "proto:redesign": "echo 'PROTOTYPE -> http://localhost:3333/?variant=A' && python3 -m http.server 3333"
   },
   "repository": {
     "type": "git",
