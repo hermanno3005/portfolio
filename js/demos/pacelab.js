@@ -38,14 +38,13 @@ const paceX = i => PACELAB_PLOT.x0 + i * (PACELAB_PLOT.x1 - PACELAB_PLOT.x0) / (
 const paceY = s => PACELAB_PLOT.y0 + (s - PACELAB_PACE_TOP) / (PACELAB_PACE_BOT - PACELAB_PACE_TOP) * (PACELAB_PLOT.y1 - PACELAB_PLOT.y0);
 const mmss  = s => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
 
-/* Chart furniture greys — the axis, its ticks and the observed line, all of
-   which have to recede behind the green NP line. Deliberately darker than
-   `--dim`, which is the dimmest colour the site's palette carries and still too
-   bright for a gridline; ported from the approved prototype rather than
-   re-picked here. Amber and green are the site's own tokens, below. */
-const PACELAB_GRID  = '#1e1e1e';
-const PACELAB_TICK  = '#3a3f47';
-const PACELAB_MUTED = '#4b515a';
+/* Chart furniture — the axis, its ticks and the observed line, all of which
+   have to recede behind the green NP line. The palette's chart tokens, which
+   sit below `--dim` on purpose: `--dim` is the floor for text and still too
+   bright for a gridline. Amber and green are the site's accent tokens, below. */
+const PACELAB_GRID  = 'var(--chart-grid)';
+const PACELAB_TICK  = 'var(--chart-tick)';
+const PACELAB_MUTED = 'var(--chart-muted)';
 
 /* The end labels' real coordinates. Named constants because beat two's flying
    number computes its landing transform from them: hand-guessed offsets came
@@ -234,14 +233,14 @@ const PACELAB_LABEL_SHIFT = (PACELAB_LABEL_LEAD.length + 1) * PACELAB_LABEL_ADVA
    A chip with no `go` never flies into the number, and that is the only place
    wind's exclusion is written down.
 
-   `in` and `go` are seconds. The panel tints are chrome rather than palette
-   tokens: they are the inside of a shape, not the colour of a value, and at
-   token strength they would compete with the number. */
+   `in` and `go` are seconds. The panels take the palette's tint tokens rather
+   than the accents: they are the inside of a shape, not the colour of a value,
+   and at accent strength they would compete with the number. */
 const PACELAB_CHIP  = { x: 560, w: 230, h: 34, gap: 44, y0: 76 };
 const PACELAB_CHIPS = [
-  { id: 'grade', glyph: '⛰', label: 'grade', value: '+2 s/km', colour: 'var(--cyan)', fill: '#0f1620', line: '#1e2b38', in: 0.5, go: 2.1 },
-  { id: 'heat',  glyph: '🌡', label: 'heat',  value: '+9 s/km', colour: 'var(--heat)', fill: '#1d1409', line: '#3a2a12', in: 0.8, go: 2.3 },
-  { id: 'wind',  glyph: '💨', label: 'wind',  value: '+0 — not in NP', colour: PACELAB_TICK, fill: '#101010', line: '#232323', in: 1.1 },
+  { id: 'grade', glyph: '⛰', label: 'grade', value: '+2 s/km', colour: 'var(--cyan)', fill: 'var(--tint-cyan)', line: 'var(--tint-cyan-line)', in: 0.5, go: 2.1 },
+  { id: 'heat',  glyph: '🌡', label: 'heat',  value: '+9 s/km', colour: 'var(--heat)', fill: 'var(--tint-heat)', line: 'var(--tint-heat-line)', in: 0.8, go: 2.3 },
+  { id: 'wind',  glyph: '💨', label: 'wind',  value: '+0 — not in NP', colour: PACELAB_TICK, fill: 'var(--tint-none)', line: 'var(--tint-none-line)', in: 1.1 },
 ];
 
 /* The term that is measured and then left outside, by name: beat two redraws

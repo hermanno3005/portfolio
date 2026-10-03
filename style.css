@@ -7,20 +7,63 @@
   font-display: swap;
 }
 
-/* ── Ghostty Dark Default theme ── */
+/* ── One palette ──
+   Every surface on the site draws from these tokens: the window chrome, the
+   terminal, the demo charts, the closed screen, the easter egg and the mobile
+   card. Before this set there was no neutral ramp, so each surface invented its
+   own greys and the title bar ran a second accent palette beside the
+   terminal's. A colour that is not here should not be anywhere.
+
+   Accents carry meaning, never decoration: green is something you can type or
+   run, cyan goes somewhere, amber is heat and the runnable `*`, red is an
+   error. */
 :root {
-  --bg:         #0d0d0d;
-  --bg-title:   #1a1a1a;
-  --fg:         #dcdcdc;
-  --dim:        #6b7280;
-  --green:      #5af78e;
-  --cyan:       #57c7ff;
-  --red:        #ff5c57;
-  --heat:       #ffb86c; /* not only heat: also the `*` marking a runnable project */
-  --cursor:     #fffaf4;
-  --selection:  #3d4551;
-  --font:       'JetBrains Mono', 'Cascadia Code', 'Fira Code', monospace;
-  --font-size:  14px;
+  /* surfaces, darkest first */
+  --page:        #0a0b0e;   /* the desk the window sits on */
+  --bg:          #111317;   /* the terminal, and its title bar */
+  --bg-title:    #111317;
+  --panel:       #16181d;   /* a raised surface: the card's buttons */
+  --panel-line:  #25282f;
+  --line:        #1f2228;   /* hairlines */
+  --line-strong: #2d3139;   /* hairlines that have to be found: the scrollbar */
+
+  /* ink */
+  --fg:          #d9dce2;
+  --dim:         #7c838e;   /* 4.9:1 on --bg, the floor for text */
+  --cursor:      #e9e4da;
+  --selection:   #2a3442;
+
+  /* accents */
+  --green:       #77dd9f;
+  --cyan:        #74c3ee;
+  --red:         #ef736d;
+  --heat:        #f0b26b; /* not only heat: also the `*` marking a runnable project */
+
+  /* chart furniture — gridlines, tick labels, axis words: below --dim on
+     purpose, so they recede behind the values the demos draw in accents */
+  --chart-grid:  #1b1d22;
+  --chart-tick:  #3d424b;
+  --chart-muted: #59606b;
+
+  /* an accent as the inside of a shape: the demo chips and the card's primary
+     buttons, at a strength that cannot compete with the value they hold */
+  --tint-green: #1e2a26;  --tint-green-line: #3a644d;
+  --tint-cyan:  #0f1a23;  --tint-cyan-line:  #1f3445;
+  --tint-heat:  #1d160d;  --tint-heat-line:  #3c2c17;
+  --tint-none:  #131418;  --tint-none-line:  #272a30;
+
+  /* The desk: a faint dot grid, lit by the accents at about a tenth of their
+     strength. Literal rather than mixed from the tokens above, because a
+     colour-mix() an old browser can't parse would void the whole background. */
+  --wallpaper:
+    radial-gradient(circle at 1px 1px, rgb(255 255 255 / .035) 1px, transparent 1.6px) 0 0 / 22px 22px,
+    radial-gradient(70% 55% at 10% 0%,   rgb(119 221 159 / .11), transparent 70%),
+    radial-gradient(55% 60% at 100% 30%, rgb(116 195 238 / .10), transparent 70%),
+    radial-gradient(70% 50% at 45% 105%, rgb(240 178 107 / .08), transparent 70%),
+    var(--page);
+
+  --font:        'JetBrains Mono', 'Cascadia Code', 'Fira Code', monospace;
+  --font-size:   14px;
   --line-height: 1.6;
 }
 
@@ -34,7 +77,6 @@
 
 html, body {
   height: 100%;
-  background: #000;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -42,28 +84,42 @@ html, body {
   font-size: var(--font-size);
   line-height: var(--line-height);
   overflow: hidden;
+  -webkit-font-smoothing: antialiased;
 }
+/* On the root, not the body: html is the flex container here, so the body is
+   only as wide as the window and its background would stop at the window's
+   edges. */
+html { background: var(--wallpaper); }
 
-/* ── Window Chrome ── */
+/* ── Window Chrome ──
+   920px wide because 920 − 2 × 26px of padding is 868, the demos' own viewBox:
+   at full size they draw 1:1. The height is what the viewport can spare. */
 #window {
-  width: min(900px, 100vw);
-  height: min(600px, 100vh);
+  width:  min(920px, calc(100vw - 48px));
+  height: min(820px, calc(100vh - 120px));
   display: flex;
   flex-direction: column;
-  border-radius: 10px;
+  border-radius: 12px;
   overflow: hidden;
-  box-shadow: 0 30px 80px rgba(0,0,0,.8), 0 0 0 1px rgba(255,255,255,.07);
+  background: var(--bg);
+  box-shadow:
+    0 0 0 1px rgb(255 255 255 / .07),
+    0 50px 120px -30px rgb(0 0 0 / .9),
+    0 18px 40px -12px rgb(0 0 0 / .6);
 }
 
+/* The bar is the terminal's own surface, as in Ghostty's transparent
+   titlebar, set off by a hairline rather than a second shade of grey. */
 #titlebar {
   background: var(--bg-title);
-  height: 38px;
+  height: 40px;
   display: flex;
   align-items: center;
   padding: 0 16px;
   gap: 12px;
   flex-shrink: 0;
-  border-bottom: 1px solid rgba(255,255,255,.06);
+  border-bottom: 1px solid var(--line);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / .04);
   user-select: none;
 }
 
@@ -83,12 +139,15 @@ html, body {
   cursor: pointer;
   transition: filter .15s;
   position: relative;
+  box-shadow: inset 0 0 0 .5px rgb(0 0 0 / .35);
 }
-.dot:hover  { filter: brightness(1.25); }
+.dot:hover  { filter: brightness(1.15); }
 .dot:active { filter: brightness(.85); }
-.dot.red    { background: #ff5f57; }
-.dot.yellow { background: #ffbd2e; }
-.dot.green  { background: #28c840; }
+/* The palette's own red, amber and green — not a parallel set of chrome
+   colours that almost match the terminal's. */
+.dot.red    { background: var(--red); }
+.dot.yellow { background: var(--heat); }
+.dot.green  { background: var(--green); }
 
 /* Icon glyphs on hover */
 .dot::after {
@@ -98,7 +157,7 @@ html, body {
   transition: opacity .1s;
   font-size: 9px;
   line-height: 1;
-  color: rgba(0,0,0,.6);
+  color: rgb(0 0 0 / .6);
   font-family: sans-serif;
   font-weight: 900;
 }
@@ -106,12 +165,15 @@ html, body {
 #traffic-lights:hover .dot.yellow::after { content: '−'; opacity: 1; }
 #traffic-lights:hover .dot.green::after  { content: '+'; opacity: 1; }
 
+/* Centred on the window rather than on what the lights leave over: the margin
+   is the lights' width plus the gap, so the title's box is symmetric. */
 #window-title {
   flex: 1;
   text-align: center;
   color: var(--dim);
   font-size: 12px;
-  letter-spacing: .3px;
+  letter-spacing: .02em;
+  margin-right: 64px;
 }
 
 /* ── Window states ── */
@@ -128,12 +190,12 @@ html, body {
   transition: none;
 }
 
-/* Closed: connection-lost overlay */
+/* Closed: connection-lost overlay, on the same desk the window stood on */
 #closed-screen {
   display: none;
   position: fixed;
   inset: 0;
-  background: #000;
+  background: var(--wallpaper);
   align-items: center;
   justify-content: center;
   flex-direction: column;
@@ -148,9 +210,11 @@ html, body {
   text-align: center;
   line-height: 2;
 }
-#closed-screen .closed-msg span { color: var(--red); }
+#closed-screen .closed-host  { color: var(--red); }
+#closed-screen .closed-tilde { opacity: .5; }
 #closed-screen .closed-hint {
-  color: #333;
+  color: var(--dim);
+  opacity: .6;
   font-size: 11px;
 }
 
@@ -159,16 +223,17 @@ html, body {
   background: var(--bg);
   flex: 1;
   overflow-y: auto;
-  padding: 12px 16px 12px;
+  padding: 16px 26px 18px;
   cursor: text;
   display: flex;
   flex-direction: column;
   outline: none;
+  scrollbar-color: var(--line-strong) transparent;
 }
 
 #terminal::-webkit-scrollbar { width: 6px; }
 #terminal::-webkit-scrollbar-track { background: transparent; }
-#terminal::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
+#terminal::-webkit-scrollbar-thumb { background: var(--line-strong); border-radius: 3px; }
 
 /* ── Output ── */
 #output {
@@ -187,6 +252,13 @@ html, body {
   gap: 0;
   flex-wrap: wrap;
 }
+
+/* The prompt ends in a space, but here that space is a whitespace-only text
+   node between flex items, and flex layout drops it — so an echo read
+   `~$projects` and the cursor sat flush against the `$`. One character of
+   margin puts the gap back without touching the markup. */
+.output-line.prompt-echo > span:last-child,
+#input-wrapper { margin-left: 1ch; }
 
 /* ── Input Line ── */
 #input-line {
@@ -254,10 +326,11 @@ html, body {
    The element a foreground process owns. Its height is reserved inline, from
    the demo's own declared height, so nothing below it moves once it lands. */
 .demo-frame   { white-space: normal; }
-/* The chart scales with the terminal, never past 1:1 — its viewBox is already
-   the content width at the 900px window cap, so `width: 100%` only ever shrinks
-   it, and the reserved height stays an upper bound. */
-.demo-frame svg { display: block; width: 100%; height: auto; }
+/* The chart scales with the terminal, never past 1:1. Its viewBox is the
+   content width of the window at full size, so `width: 100%` alone would only
+   ever shrink it — until fullscreen widens the column, and the chart grows
+   past the height reserved for it. The cap keeps that height an upper bound. */
+.demo-frame svg { display: block; width: 100%; max-width: 868px; height: auto; }
 .demo-caption { line-height: 1.5; margin-top: 5px; }
 
 /* ── A command holding the terminal ──
@@ -305,6 +378,15 @@ html, body {
    on exactly the devices that can only tap. */
 .run-link { cursor: pointer; text-decoration: underline; }
 
+/* Both underlines sit a little lower and lighter than the browser's, so a
+   column of links reads as text with an affordance rather than as a rule. */
+.link,
+.run-link {
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+  text-decoration-color: color-mix(in oklab, currentColor 55%, transparent);
+}
+
 /* ── Neofetch Layout ── */
 .neofetch-grid {
   display: grid;
@@ -322,7 +404,7 @@ html, body {
 #eggoverlay {
   position: fixed;
   inset: 0;
-  background: #000;
+  background: var(--page);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -336,7 +418,7 @@ html, body {
 #egglog {
   position: fixed;
   inset: 0;
-  background: #000;
+  background: var(--page);
   overflow: hidden;
   z-index: 9998;
   padding: 12px 16px;
@@ -354,6 +436,7 @@ html, body {
 @media (max-width: 600px) {
   :root { --font-size: 12px; }
   #window { border-radius: 0; height: 100vh; width: 100vw; }
+  #terminal { padding: 12px 16px; }
 }
 
 /* ── Mobile recruiter card ── */
@@ -362,8 +445,13 @@ html, body {
 
 /* Shown ONLY on touch devices — a desktop mouse user never sees this, even when
    the window is narrow (pointer: coarse guarantees the normal version is unchanged).
-   900px instead of 600px so landscape phones (~850px wide) also get the card. */
+   900px instead of 600px so landscape phones (~850px wide) also get the card.
+
+   The card is the terminal window shrunk to a phone: the same title bar, the
+   same palette, and each section headed by the command that prints it on the
+   desktop, so it reads as a transcript of the session a desktop visitor gets. */
 @media (max-width: 900px) and (pointer: coarse) {
+  html, body { background: var(--bg); }
   body { overflow: auto; display: block; }
   #window, #closed-screen { display: none !important; }
 
@@ -373,26 +461,49 @@ html, body {
     min-height: 100%;
     background: var(--bg);
     color: var(--fg);
-    padding: 36px 22px calc(env(safe-area-inset-bottom, 0px) + 36px);
+    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 36px);
   }
-  .mc-inner  { max-width: 460px; margin: 0 auto; }
-  .mc-prompt { color: var(--dim); font-size: 13px; margin-bottom: 20px; }
-  .mc-name   { color: var(--green); font-size: 26px; font-weight: 700; line-height: 1.2; }
-  .mc-role   { color: var(--cyan); font-size: 15px; margin-top: 4px; }
-  .mc-bio    { color: var(--fg); font-size: 14px; line-height: 1.6; margin-top: 16px; opacity: .9; }
-  .mc-label  { color: var(--dim); font-size: 12px; margin: 28px 0 10px; }
 
+  .mc-titlebar {
+    position: relative;
+    height: 44px;
+    line-height: 44px;
+    margin-bottom: 28px;
+    text-align: center;
+    font-size: 12px;
+    color: var(--dim);
+    border-bottom: 1px solid var(--line);
+  }
+  .mc-lights { position: absolute; top: 0; bottom: 0; left: 16px; display: flex; align-items: center; gap: 8px; }
+  .mc-lights span { width: 11px; height: 11px; border-radius: 50%; }
+  .mc-lights span:nth-child(1) { background: var(--red); }
+  .mc-lights span:nth-child(2) { background: var(--heat); }
+  .mc-lights span:nth-child(3) { background: var(--green); }
+
+  .mc-inner  { max-width: 460px; margin: 0 auto; padding: 0 20px; }
+  .mc-prompt { color: var(--dim); font-size: 13px; margin-bottom: 14px; }
+  .mc-name   { color: var(--fg); font-size: 28px; font-weight: 700; line-height: 1.2; letter-spacing: -.01em; }
+  .mc-role   { color: var(--dim); font-size: 14px; margin-top: 6px; }
+  .mc-bio    { color: var(--fg); font-size: 14px; line-height: 1.6; margin-top: 16px; opacity: .85; }
+  .mc-label  { color: var(--dim); font-size: 13px; margin: 32px 0 12px; }
+  .mc-cmd    { color: var(--green); }
+
+  /* Colour by what a tap does, as in the terminal: green is the primary
+     action, cyan leaves the page. */
   .mc-btn {
     display: flex; align-items: center; gap: 8px;
     padding: 14px 16px; margin-bottom: 10px;
-    background: #161616; border: 1px solid #262626; border-radius: 8px;
-    color: var(--fg); font: inherit; font-size: 15px;
+    background: var(--panel); border: 1px solid var(--panel-line); border-radius: 10px;
+    color: var(--cyan); font: inherit; font-size: 15px;
     text-decoration: none;
     -webkit-tap-highlight-color: transparent;
   }
-  .mc-btn:active  { background: #1f1f1f; }
-  .mc-primary     { border-color: var(--green); color: var(--green); }
-  .mc-footer      { color: var(--dim); font-size: 12px; margin-top: 30px; text-align: center; }
+  .mc-btn:active  { background: var(--line); }
+  .mc-primary     { background: var(--tint-green); border-color: var(--tint-green-line); color: var(--green); }
+  .mc-footer {
+    color: var(--dim); font-size: 12px; text-align: center;
+    margin-top: 32px; padding-top: 22px; border-top: 1px solid var(--line);
+  }
 
   /* A project row: denser and quieter than the CV and links buttons, because
      it is something to scan on the way past rather than a thing to tap. The
@@ -402,11 +513,11 @@ html, body {
   .mc-proj {
     display: flex; align-items: center; gap: 12px;
     padding: 12px 14px; margin-bottom: 8px;
-    background: #131313; border: 1px solid #222; border-radius: 8px;
+    background: var(--panel); border: 1px solid var(--panel-line); border-radius: 10px;
     color: var(--fg); text-decoration: none;
     -webkit-tap-highlight-color: transparent;
   }
-  .mc-proj:active     { background: #1b1b1b; }
+  .mc-proj:active     { background: var(--line); }
   .mc-proj-body       { flex: 1 1 auto; min-width: 0; }
   .mc-proj-top        { display: flex; align-items: baseline; gap: 8px; }
   .mc-proj-name       { color: var(--green); font-size: 15px; }

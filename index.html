@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Hermann Aust · hermann@portfolio — zsh</title>
   <meta name="description" content="Hermann Aust — automotive engineer working on ADAS and vehicle software: CAN bus analysis, diagnostics, Python tooling. Interactive terminal-style portfolio." />
-  <meta name="theme-color" content="#0d0d0d" />
+  <meta name="theme-color" content="#0a0b0e" />
 
   <!-- Open Graph (link previews on LinkedIn, Slack, etc.) -->
   <meta property="og:type" content="website" />
@@ -55,23 +55,28 @@
 
   <!-- Mobile recruiter card (shown only on touch devices ≤900px, incl. landscape phones; desktop never sees it) -->
   <main id="mobile-card">
+    <!-- The terminal window's own title bar, at phone size. Decorative: the
+         card has no window to close. -->
+    <div class="mc-titlebar" aria-hidden="true">
+      <span class="mc-lights"><span></span><span></span><span></span></span>hermann@portfolio — zsh
+    </div>
     <div class="mc-inner">
       <div class="mc-prompt">hermann@portfolio:~$ whoami</div>
       <h1 class="mc-name" id="mc-name">Hermann Aust</h1>
       <p class="mc-role" id="mc-role">Automotive Engineer · Software</p>
       <p class="mc-bio" id="mc-bio"></p>
 
-      <div class="mc-label">// download cv</div>
+      <div class="mc-label">$ <span class="mc-cmd">open cv</span></div>
       <a class="mc-btn mc-primary" href="assets/CV_Hermann_Aust.pdf" download="Hermann_Aust_CV.pdf">📄 CV — English</a>
       <a class="mc-btn mc-primary" href="assets/Lebenslauf_Hermann_Aust.pdf" download="Hermann_Aust_Lebenslauf.pdf">📄 Lebenslauf — Deutsch</a>
 
-      <!-- // projects — the label and the rows are both built by initMobileCard()
+      <!-- $ projects — the label and the rows are both built by initMobileCard()
            from DATA, so a card with nothing to show has no empty section. It sits
            here, between the CV and the links, so a recruiter reaching for
            LinkedIn scrolls past what was built. -->
       <div id="mc-projects"></div>
 
-      <div class="mc-label">// links</div>
+      <div class="mc-label">$ <span class="mc-cmd">contact</span></div>
       <a class="mc-btn" id="mc-linkedin" target="_blank" rel="noopener">→ LinkedIn</a>
       <a class="mc-btn" id="mc-github" target="_blank" rel="noopener">→ GitHub</a>
       <a class="mc-btn" id="mc-email">→ Email</a>
@@ -83,8 +88,8 @@
   <!-- Closed screen -->
   <div id="closed-screen">
     <div class="closed-msg">
-      Connection to <span>hermann@portfolio</span> closed by remote host.<br>
-      <span style="color:#444">~</span>
+      Connection to <span class="closed-host">hermann@portfolio</span> closed by remote host.<br>
+      <span class="closed-tilde">~</span>
     </div>
     <div class="closed-hint">click anywhere to reconnect</div>
   </div>
