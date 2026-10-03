@@ -214,7 +214,7 @@ describe('the palette', () => {
     const css = read('style.css');
     const root = css.slice(css.indexOf(':root {'), css.indexOf('}', css.indexOf(':root {')));
 
-    expect(root).toMatch(/--heat:\s*#ffb86c;/);
+    expect(root).toMatch(/--heat:\s*#f0b26b;/);
     expect(root).toMatch(/--heat:[^\n]*\/\*[^\n]*\*\//);
   });
 

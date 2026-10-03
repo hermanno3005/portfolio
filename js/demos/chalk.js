@@ -171,14 +171,14 @@ const chalkX = n => CHALK_PLOT.x0 + (n - 1) * (CHALK_PLOT.x1 - CHALK_PLOT.x0) / 
 const chalkY = w => CHALK_PLOT.y0 + (w - CHALK_PLOT_TOP) / (CHALK_PLOT_BOT - CHALK_PLOT_TOP) * (CHALK_PLOT.y1 - CHALK_PLOT.y0);
 const chalkF = v => v.toFixed(1);
 
-/* Chart furniture greys — the gridlines, the tick labels and the axis words,
-   all of which have to recede behind the curve. Ported from PaceLab rather than
-   re-picked, so the two frames sit in one visual system; they are furniture,
-   not values, which is why they are not palette tokens. Amber, green and cyan
-   are the site's own tokens wherever a value carries one. */
-const CHALK_GRID  = '#1e1e1e';
-const CHALK_TICK  = '#3a3f47';
-const CHALK_MUTED = '#4b515a';
+/* Chart furniture — the gridlines, the tick labels and the axis words, all of
+   which have to recede behind the curve. The palette's chart tokens, the same
+   three PaceLab draws with, so the two frames sit in one visual system; they
+   are furniture rather than values, which is why they are not accents. Amber,
+   green and cyan are the site's accent tokens wherever a value carries one. */
+const CHALK_GRID  = 'var(--chart-grid)';
+const CHALK_TICK  = 'var(--chart-tick)';
+const CHALK_MUTED = 'var(--chart-muted)';
 
 /* The glow the curve carries, matching the one PaceLab's NP line carries. The
    filter id is stable rather than per-paint unique: two runs leave two frames

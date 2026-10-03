@@ -94,7 +94,7 @@ describe('which projects get a row', () => {
     });
     try {
       expect(rows(t)).toHaveLength(0);
-      expect(t.card().textContent).not.toContain('// projects');
+      expect(t.card().textContent).not.toContain('$ projects');
     } finally {
       t.cleanup();
     }
@@ -107,7 +107,7 @@ describe('where the section sits', () => {
      Nothing else in the suite would catch this section moving. */
   it('sits between the CV block and the links block', () => {
     const labels = [...term.card().querySelectorAll('.mc-label')].map(el => el.textContent.trim());
-    expect(labels).toEqual(['// download cv', '// projects', '// links']);
+    expect(labels).toEqual(['$ open cv', '$ projects', '$ contact']);
   });
 
   it('keeps the CV downloads and the links themselves', () => {
@@ -161,7 +161,7 @@ describe('the card is English, whatever the terminal is', () => {
     await term.run('lang de');
     expect(parts(rows(term)[1]).line).toBe('a rep-max out of every entry');
     expect([...term.card().querySelectorAll('.mc-label')].map(el => el.textContent.trim()))
-      .toContain('// projects');
+      .toContain('$ projects');
   });
 });
 

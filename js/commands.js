@@ -493,7 +493,7 @@ function initMobileCard() {
   if (!projects) return;
 
   const rows = DATA.projects.filter(p => p.cardLine);
-  projects.innerHTML = rows.length === 0 ? '' : `<div class="mc-label">// projects</div>` + rows.map(p => {
+  projects.innerHTML = rows.length === 0 ? '' : `<div class="mc-label">$ <span class="mc-cmd">projects</span></div>` + rows.map(p => {
     /* The whole row is the link, so the `›` is the only affordance it needs —
        and it is drawn only when there is somewhere to go. A card line without a
        URL is an authoring mistake rather than a second gate: say so, and still

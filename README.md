@@ -1,7 +1,9 @@
 # hermann-aust.com
 
-Terminal-style portfolio — a fake zsh session in the browser, themed after
-[Ghostty](https://ghostty.org)'s dark default. Vanilla HTML/CSS/JS, no build
+Terminal-style portfolio — a fake zsh session in the browser, in a
+[Ghostty](https://ghostty.org)-style window. One graphite palette, defined as
+tokens at the top of `style.css`, colours every surface: the window, the
+terminal, the demo charts and the mobile card. Vanilla HTML/CSS/JS, no build
 step, no runtime dependencies, deployed on Cloudflare.
 
 <!-- TODO: add a screenshot
