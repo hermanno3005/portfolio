@@ -1,0 +1,98 @@
+/*
+ * Chalk's pages — the privacy policy and support page the App Store listing
+ * links to. They share nothing with the terminal: plain documents in Chalk's
+ * own identity (monochrome, one cool grey, the system font so SF Pro on Apple
+ * devices), following the visitor's light or dark setting. Colours are the
+ * app's asset catalog values, except the light grey: the app's #A2A7AC is too
+ * faint for running text on white, so it is darkened here to pass 4.5:1.
+ */
+
+:root {
+  --ground: #ffffff;
+  --ink: #000000;
+  --grey: #6e7378;
+  --rule: #e4e6e8;
+  color-scheme: light dark;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --ground: #000000;
+    --ink: #ffffff;
+    --grey: #8a8f96;
+    --rule: #1f2124;
+  }
+}
+
+* { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  background: var(--ground);
+  color: var(--ink);
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, "Helvetica Neue", Arial, sans-serif;
+  font-size: 17px;
+  line-height: 1.5;
+}
+
+main {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 56px 20px 72px;
+}
+
+/* The app's detail screens put the name in grey above the bold number; a page
+   puts "Chalk" above its title the same way. */
+.eyebrow {
+  margin: 0;
+  color: var(--grey);
+  font-weight: 600;
+}
+
+h1 {
+  margin: 0 0 8px;
+  font-size: 40px;
+  line-height: 1.1;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+h2 {
+  margin: 40px 0 8px;
+  font-size: 20px;
+  font-weight: 600;
+}
+
+p, ul { margin: 0 0 12px; }
+
+ul { padding-left: 20px; }
+
+li { margin-bottom: 4px; }
+
+a { color: inherit; text-underline-offset: 3px; }
+
+.meta { color: var(--grey); }
+
+.lead { font-size: 20px; font-weight: 600; margin: 32px 0 0; }
+
+.contact {
+  display: inline-block;
+  margin: 24px 0 8px;
+  font-size: 24px;
+  font-weight: 700;
+  word-break: break-all;
+}
+
+footer {
+  margin-top: 56px;
+  padding-top: 16px;
+  border-top: 1px solid var(--rule);
+  color: var(--grey);
+  font-size: 15px;
+}
+
+footer a { color: var(--grey); }
+
+footer a + a { margin-left: 16px; }
